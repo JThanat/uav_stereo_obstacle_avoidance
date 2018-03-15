@@ -45,7 +45,7 @@ endif()
 # Add any additional include directories as specified by the calling process (either user or another CMake file).
 # ASL: Doesn't use this, catkin manages the mav_comm dependency
 # PX4: Provides include directory for mav_msgs, so that "mav_msgs/default_topics.h" can be found and used.
-include_directories(${ADDITIONAL_INCLUDE_DIRS})
+include_directories(${ADDITIONAL_INCLUDE_DIRS} ${OGRE_INCLUDE_DIRS}/Paging)
 
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 message(STATUS "CMAKE_BINARY_DIR = ${CMAKE_BINARY_DIR}")
