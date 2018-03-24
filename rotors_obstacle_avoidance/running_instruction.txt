@@ -1,0 +1,17 @@
+cd <Firmware_clone>
+make posix_sitl_default gazebo
+source ~/catkin_ws/devel/setup.bash    // (optional)
+source Tools/setup_gazebo.bash $(pwd) $(pwd)/build/posix_sitl_default
+export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:$(pwd)
+export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:$(pwd)/Tools/sitl_gazebo
+roslaunch px4 posix_sitl.launch
+
+rosrun rotors_obstacle_avoidance offb_node
+
+#optional launch
+posix_sitl.launch: plain SITL launch
+mavros_posix_sitl.launch: SITL and MAVROS
+multi_uav_mavros_sitl.launch
+
+roslaunch px4 multi_uav_mavros_sitl.launch
+
