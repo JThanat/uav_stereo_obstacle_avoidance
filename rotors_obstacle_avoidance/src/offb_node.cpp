@@ -18,10 +18,13 @@ void state_cb(const mavros_msgs::State::ConstPtr &msg)
     current_state = *msg;
 }
 
+void isInCrashingZone();
+
 geometry_msgs::PoseStamped current_pose;
 void pose_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
 {
     current_pose = *msg;
+    isInCrashingZone();
 }
 
 bool checkEqualPose(const geometry_msgs::PoseStamped expectedPosition)
@@ -33,12 +36,30 @@ bool checkEqualPose(const geometry_msgs::PoseStamped expectedPosition)
     );
 }
 
+bool avoiding = false;
+void isInCrashingZone() {
+    // check if in crashing zone 
+    // hardcoded for now
+    geometry_msgs::PoseStamped dangerPose;
+    dangerPose.pose.position.x = 0;
+    dangerPose.pose.position.y = 10;
+    dangerPose.pose.position.z = 2;
+
+    if(dangerPose.pose.position.y - current_pose.pose.position.y < 4 && 
+    dangerPose.pose.position.y - current_pose.pose.position.y > 0 && !avoiding) {
+        avoiding = true;
+    }
+}
+
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "offb_node");
     ros::NodeHandle nh;
     std::vector<geometry_msgs::PoseStamped> poses(4);
+    std::vector<geometry_msgs::PoseStamped> avoidingPath(3);
     int i = 0;
+    int avoidingIdx = 0;
+    int avoidingSize = 3;
     bool armed = false;
     bool enabled = false;
 
@@ -62,25 +83,35 @@ int main(int argc, char **argv)
     }
     ROS_INFO("set pose array");
 
-    // geometry_msgs::PoseStamped pose;
-    // pose.pose.position.x = 0;
-    // pose.pose.position.y = 0;
-    // pose.pose.position.z = 2;
+    // initial
     poses[0].pose.position.x = 0;
     poses[0].pose.position.y = 0;
     poses[0].pose.position.z = 2;
 
+    // goal
     poses[1].pose.position.x = 0;
-    poses[1].pose.position.y = 5;
+    poses[1].pose.position.y = 25;
     poses[1].pose.position.z = 2;
 
-    poses[2].pose.position.x = 5;
-    poses[2].pose.position.y = 5;
-    poses[2].pose.position.z = 2;
+    // poses[2].pose.position.x = 5;
+    // poses[2].pose.position.y = 5;
+    // poses[2].pose.position.z = 2;
 
-    poses[3].pose.position.x = 5;
-    poses[3].pose.position.y = 0;
-    poses[3].pose.position.z = 2;
+    // poses[3].pose.position.x = 5;
+    // poses[3].pose.position.y = 0;
+    // poses[3].pose.position.z = 2;
+
+    avoidingPath[0].pose.position.x = 5;
+    avoidingPath[0].pose.position.y = 10;
+    avoidingPath[0].pose.position.z = 2;
+
+    avoidingPath[1].pose.position.x = 5;
+    avoidingPath[1].pose.position.y = 15;
+    avoidingPath[1].pose.position.z = 2;
+
+    avoidingPath[2].pose.position.x = 2;
+    avoidingPath[2].pose.position.y = 15;
+    avoidingPath[2].pose.position.z = 2;
 
     //send a few setpoints before starting
     for (int i = 100; ros::ok() && i > 0; --i)
@@ -113,6 +144,9 @@ int main(int argc, char **argv)
         }
         else
         {
+            if (current_state.mode == "OFFBOARD") {
+                enabled = true;
+            }
             if (!current_state.armed &&
                 (ros::Time::now() - last_request > ros::Duration(5.0)))
             {
@@ -127,16 +161,36 @@ int main(int argc, char **argv)
         }
 
         if (!enabled || !armed) {
-            local_pos_pub.publish(poses[i%4]);
+            local_pos_pub.publish(poses[0]);
+            ros::spinOnce();
+        }
+
+        if(avoiding) {
+            // avoiding in guided mode
+            ROS_INFO("Avoiding");
+            if(avoidingIdx == avoidingSize) {
+                avoiding = false;
+                continue;
+            }
+            if(checkEqualPose(avoidingPath[avoidingIdx])) {
+                avoidingIdx++;
+            }
+            local_pos_pub.publish(avoidingPath[avoidingIdx]);
+            ros::spinOnce();
+            
+        } else {
+            // keep moving to goal
+            local_pos_pub.publish(poses[1]);
             ros::spinOnce();
         }
         
-        if(checkEqualPose(poses[i%4])) {
-            i++;
-            ROS_INFO("i: %d",i);
-            local_pos_pub.publish(poses[i%4]);
-            ros::spinOnce();
-        }
+        // if(checkEqualPose(poses[i%4])) {
+        //     i++;
+        //     ROS_INFO("i: %d",i);
+        //     local_pos_pub.publish(poses[i%4]);
+        //     ros::spinOnce();
+        // }
+
         // local_pos_pub.publish(poses[i%4]);
         // ros::spinOnce();
         rate.sleep();
