@@ -15,3 +15,19 @@ multi_uav_mavros_sitl.launch
 
 roslaunch px4 multi_uav_mavros_sitl.launch
 
+roslaunch px4 mavros_posix_sitl.launch
+
+# New Running Instruction 
+Terminal 1:
+sudo no_sim=1 make posix_sitl_default gazebo
+
+Terminal 2:
+source Tools/setup_gazebo.bash $(pwd) $(pwd)/build/posix_sitl_default
+roslaunch gazebo_ros empty_world.launch world_name:=$(pwd)/Tools/sitl_gazebo/worlds/iris.world
+
+Terminal 3:
+roslaunch mavros px4.launch fcu_url:="udp://:14540@127.0.0.1:14557"
+
+
+
+

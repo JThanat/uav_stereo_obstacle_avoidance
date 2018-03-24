@@ -27,9 +27,9 @@ void pose_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
 bool checkEqualPose(const geometry_msgs::PoseStamped expectedPosition)
 {
     return (
-        std::abs(expectedPosition.pose.position.x - current_pose.pose.position.x) < 0.05 && 
-        std::abs(expectedPosition.pose.position.y - current_pose.pose.position.y) < 0.05 && 
-        std::abs(expectedPosition.pose.position.z - current_pose.pose.position.z) < 0.05
+        std::abs(expectedPosition.pose.position.x - current_pose.pose.position.x) < 0.5 && 
+        std::abs(expectedPosition.pose.position.y - current_pose.pose.position.y) < 0.5 && 
+        std::abs(expectedPosition.pose.position.z - current_pose.pose.position.z) < 0.5
     );
 }
 
@@ -39,6 +39,8 @@ int main(int argc, char **argv)
     ros::NodeHandle nh;
     std::vector<geometry_msgs::PoseStamped> poses(4);
     int i = 0;
+    bool armed = false;
+    bool enabled = false;
 
     ros::Subscriber state_sub = nh.subscribe<mavros_msgs::State>("mavros/state", 10, state_cb);
     ros::Publisher local_pos_pub = nh.advertise<geometry_msgs::PoseStamped>("mavros/setpoint_position/local", 10);
@@ -98,7 +100,6 @@ int main(int argc, char **argv)
 
     while (ros::ok())
     {
-        ROS_INFO("ros ok!");
         if (current_state.mode != "OFFBOARD" &&
             (ros::Time::now() - last_request > ros::Duration(5.0)))
         {
@@ -106,6 +107,7 @@ int main(int argc, char **argv)
                 offb_set_mode.response.mode_sent)
             {
                 ROS_INFO("Offboard enabled");
+                enabled = true;
             }
             last_request = ros::Time::now();
         }
@@ -118,17 +120,25 @@ int main(int argc, char **argv)
                     arm_cmd.response.success)
                 {
                     ROS_INFO("Vehicle armed");
+                    armed = true;
                 }
                 last_request = ros::Time::now();
             }
+        }
+
+        if (!enabled || !armed) {
+            local_pos_pub.publish(poses[i%4]);
+            ros::spinOnce();
         }
         
         if(checkEqualPose(poses[i%4])) {
             i++;
             ROS_INFO("i: %d",i);
+            local_pos_pub.publish(poses[i%4]);
+            ros::spinOnce();
         }
-        local_pos_pub.publish(poses[i%4]);
-        ros::spinOnce();
+        // local_pos_pub.publish(poses[i%4]);
+        // ros::spinOnce();
         rate.sleep();
     }
 
