@@ -131,6 +131,7 @@ int main(int argc, char **argv)
 
     while (ros::ok())
     {
+        ROS_INFO("Current State: %s", current_state.mode);
         if (current_state.mode != "OFFBOARD" &&
             (ros::Time::now() - last_request > ros::Duration(5.0)))
         {
@@ -138,23 +139,27 @@ int main(int argc, char **argv)
                 offb_set_mode.response.success)
             {
                 ROS_INFO("Offboard enabled");
-                enabled = true;
             }
             last_request = ros::Time::now();
         }
-        else
+
+        if (current_state.mode == "AUTO" &&
+            (ros::Time::now() - last_request > ros::Duration(5.0)))
         {
-            if (current_state.mode == "OFFBOARD") {
-                enabled = true;
-            }
-            if (!current_state.armed &&
-                (ros::Time::now() - last_request > ros::Duration(5.0)))
+            offb_set_mode.request.custom_mode = "GUIDED";
+            if (set_mode_client.call(offb_set_mode) &&
+                offb_set_mode.response.success)
             {
-                ROS_INFO("Waiting to ARM");
-                last_request = ros::Time::now();
+                ROS_INFO("GUIDED enabled");
             }
+            last_request = ros::Time::now();
         }
 
+        if (current_state.mode == "GUIDED" &&
+            (ros::Time::now() - last_request > ros::Duration(5.0)))
+        {   
+            ROS_INFO("GUIDED MODE");
+        }
         rate.sleep();
     }
 
