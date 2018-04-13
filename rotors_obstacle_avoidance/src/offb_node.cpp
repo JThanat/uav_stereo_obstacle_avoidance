@@ -155,8 +155,6 @@ int main(int argc, char **argv)
             }
         }
 
-        ROS
-
         rate.sleep();
     }
 
