@@ -150,7 +150,7 @@ int main(int argc, char **argv)
             if (!current_state.armed &&
                 (ros::Time::now() - last_request > ros::Duration(5.0)))
             {
-                ROS_INFO("Waiting to ARM")
+                ROS_INFO("Waiting to ARM");
                 last_request = ros::Time::now();
             }
         }
