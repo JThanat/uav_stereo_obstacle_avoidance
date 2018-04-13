@@ -131,7 +131,7 @@ int main(int argc, char **argv)
 
     while (ros::ok())
     {
-        ROS_INFO("Current State: %s", current_state.mode);
+        ROS_INFO("Current State: %s", current_state.mode.data.c_str());
         if (current_state.mode != "OFFBOARD" &&
             (ros::Time::now() - last_request > ros::Duration(5.0)))
         {
