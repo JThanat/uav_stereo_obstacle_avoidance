@@ -131,17 +131,6 @@ int main(int argc, char **argv)
 
     while (ros::ok())
     {
-        ROS_INFO("Current State: %s", current_state.mode.data.c_str());
-        if (current_state.mode != "OFFBOARD" &&
-            (ros::Time::now() - last_request > ros::Duration(5.0)))
-        {
-            if (set_mode_client.call(offb_set_mode) &&
-                offb_set_mode.response.success)
-            {
-                ROS_INFO("Offboard enabled");
-            }
-            last_request = ros::Time::now();
-        }
 
         if (current_state.mode == "AUTO" &&
             (ros::Time::now() - last_request > ros::Duration(5.0)))
@@ -159,6 +148,12 @@ int main(int argc, char **argv)
             (ros::Time::now() - last_request > ros::Duration(5.0)))
         {   
             ROS_INFO("GUIDED MODE");
+        }
+
+        if (current_state.mode != "GUIDED" && current_state.mode != "AUTO" &&
+            (ros::Time::now() - last_request > ros::Duration(5.0)))
+        {
+            ROS_INFO("UNKNOWN MODE");
         }
         rate.sleep();
     }
