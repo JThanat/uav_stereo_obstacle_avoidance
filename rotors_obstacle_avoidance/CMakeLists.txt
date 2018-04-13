@@ -64,10 +64,10 @@ target_link_libraries(offb_node
   ${catkin_LIBRARIES}
 )
 
-add_executable(offb_circle src/circle.cpp)
+#add_executable(offb_circle src/circle.cpp)
 # add_dependencies(offb_circle ${catkin_EXPORTED_TARGETS})
 
-add_dependencies(offb_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(offb_circle
-  ${catkin_LIBRARIES}
-)
+#add_dependencies(offb_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+#target_link_libraries(offb_circle
+#  ${catkin_LIBRARIES}
+#)
