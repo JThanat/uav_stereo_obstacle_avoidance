@@ -120,6 +120,7 @@ int main(int argc, char **argv)
         ros::spinOnce();
         rate.sleep();
     }
+    ROS_INFO("OK wit setpoints")
 
     mavros_msgs::SetMode offb_set_mode;
     offb_set_mode.request.custom_mode = "OFFBOARD";
@@ -131,7 +132,7 @@ int main(int argc, char **argv)
 
     while (ros::ok())
     {
-
+        ROS_INFO("Setting up things");
         if (current_state.mode == "AUTO" &&
             (ros::Time::now() - last_request > ros::Duration(5.0)))
         {
