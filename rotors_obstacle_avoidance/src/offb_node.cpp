@@ -19,14 +19,10 @@
 #include <image_transport/image_transport.h>
 #include <sensor_msgs/image_encodings.h>
 
-<<<<<<< HEAD
-using namespace cv;
-using namespace std;
+#include "umap_util.hpp"
+#include "wp_planning.hpp"
 
-Mat disp;
-=======
-cv::Mat image_left;
->>>>>>> d26ec9e2412f1cd5ed3e3194bb93fbdb3017138a
+cv::Mat disp;
 void image_cb(const sensor_msgs::ImageConstPtr& msg)
 {
     cv_bridge::CvImagePtr cv_ptr;
@@ -38,14 +34,8 @@ void image_cb(const sensor_msgs::ImageConstPtr& msg)
     {
         ROS_ERROR("Count not convert from '%s' to 'bgr8'. ", msg->encoding.c_str());
     }
-<<<<<<< HEAD
-    disp = cv_ptr->img;
-=======
     ROS_INFO("READING IMAGE");
-    image_left = cv_ptr -> image;
-    cv::imshow("view", image_left);
-    // cv::waitKey(0);
->>>>>>> d26ec9e2412f1cd5ed3e3194bb93fbdb3017138a
+    disp = cv_ptr -> image;
 }
 
 mavros_msgs::State current_state;
@@ -94,12 +84,20 @@ int main(int argc, char **argv)
     cv::namedWindow("view");
     cv::startWindowThread();
     std::vector<geometry_msgs::PoseStamped> poses(200);
-    std::vector<geometry_msgs::PoseStamped> avoidingPath(3);
-    int i,j,k;
+
+    double min, max;
+    int i,j,k,current_x, current_y;
     int avoidingIdx = 0;
     int avoidingSize = 3;
+    int current_waypoint_index = 0;
+    int num_wp = 0;
     bool armed = false;
     bool enabled = false;
+    vector<ellipse_desc> ellipse_list;
+    vector< pair<double, double> > waypoints(200);
+    vector< pair<double, double> > waypoints_pub(200);
+    cv::Mat disp8(600,800, CV_8UC3);
+
 
     ros::Subscriber state_sub = nh.subscribe<mavros_msgs::State>("mavros/state", 10, state_cb);
     ros::Publisher local_pos_pub = nh.advertise<geometry_msgs::PoseStamped>("mavros/setpoint_position/local", 10);
@@ -109,11 +107,7 @@ int main(int argc, char **argv)
     ros::Subscriber pose_sub = nh.subscribe<geometry_msgs::PoseStamped>("/mavros/local_position/pose", 10, pose_cb);
 
     image_transport::ImageTransport it(nh);
-<<<<<<< HEAD
-    image_transport::Subscriber disp_sub = it.subscribe("/stereo_msgs/DisparityImage",1,image_cb);
-=======
     image_transport::Subscriber sub = it.subscribe("/iris/camera_left/image_raw",10,image_cb);
->>>>>>> d26ec9e2412f1cd5ed3e3194bb93fbdb3017138a
     //the setpoint publishing rate MUST be faster than 2Hz
     ros::Rate rate(20.0);
 
@@ -128,6 +122,7 @@ int main(int argc, char **argv)
     }
     ROS_INFO("set pose array");
 
+    // mock up waypoint
     for (i = 0; i < 200 ; i++)
     {
         poses[i].pose.position.x = 0.1*i;
@@ -150,7 +145,10 @@ int main(int argc, char **argv)
     arm_cmd.request.value = true;
 
     ros::Time last_request = ros::Time::now();
-
+    ros::Time last_calculation;
+    
+    loop_count = 0;
+    last_calculation = ros::Time::now();
     while (ros::ok())
     {
         if (current_state.mode != "OFFBOARD" &&
@@ -187,35 +185,61 @@ int main(int argc, char **argv)
             ros::spinOnce();
         }
 
-        if(avoiding) {
-            // avoiding in guided mode
-            ROS_INFO("Avoiding");
-            if(avoidingIdx == avoidingSize) {
-                avoiding = false;
-                continue;
-            } 
-            else if(checkEqualPose(avoidingPath[avoidingIdx])) 
-            {
-                avoidingIdx++;
-            }
-            local_pos_pub.publish(avoidingPath[avoidingIdx]);
-            ros::spinOnce();
-            
-        } else {
-            // keep moving to goal
-            local_pos_pub.publish(poses[1]);
-            ros::spinOnce();
+        if(checkEqualPose(poses[current_waypoint_index]))
+        {
+            current_waypoint_index++;
         }
-        
-        // if(checkEqualPose(poses[i%4])) {
-        //     i++;
-        //     ROS_INFO("i: %d",i);
-        //     local_pos_pub.publish(poses[i%4]);
-        //     ros::spinOnce();
-        // }
 
-        // local_pos_pub.publish(poses[i%4]);
-        // ros::spinOnce();
+        if(loop_count == 0 || ros::Time::now() - last_calculation > 0.5)
+        {
+            image_size = disp.size();
+            disp.convertTo(disp8, CV_8U);
+            minMaxLoc(disp8, &min, &max, NULL, NULL);
+
+            ellipse_list = calculate_udisparity(disp8, max, image_size, obj_count);
+
+            current_x = poses[current_waypoint_index].pose.position.x; // need update
+            current_y = poses[current_waypoint_index].pose.position.y; // need update
+
+            GYb = 0; // 0 degree for now
+            Mat GRb = (Mat_<double>(2, 2) << cos(GYb * M_PI / 180), -sin(GYb * M_PI / 180), sin(GYb * M_PI / 180), cos(GYb * M_PI / 180));
+            Mat GPb = (Mat_<double>(2, 1) << current_x, current_y);
+            
+            for (i = 0; i < obj_count; ++i)
+            {
+                ellipse_list[i].u1 = ellipse_list[i].u1; // set position of the drone at the center of the image
+                ellipse_list[i].u2 = ellipse_list[i].u2;
+                ellipse_list[i].d1 = ellipse_list[i].d1/16;
+                ellipse_list[i].d2 = ellipse_list[i].d2/16;
+
+                ellipse_list[i].BPe = (Mat_<double>(2, 1) << b*(ellipse_list[i].u1 + ellipse_list[i].u2)/(2*ellipse_list[i].d2), f*b/(ellipse_list[i].d2));
+                ellipse_list[i].BSe = (Mat_<double>(2, 1) << b*(ellipse_list[i].u2 - ellipse_list[i].u1)/(2*ellipse_list[i].d2), f*b/(ellipse_list[i].d2) - f*b/(ellipse_list[i].d1));
+                ellipse_list[i].GYe = GYb;
+                ellipse_list[i].ESe = (Mat_<double>(2, 1) << b*(ellipse_list[i].u2 - ellipse_list[i].u1)/(2*ellipse_list[i].d2), f*b/(ellipse_list[i].d2) - f*b/(ellipse_list[i].d1));
+                ellipse_list[i].GPe = GRb * ellipse_list[i].BPe + GPb;
+                ellipse_list[i].GSe = GRb * ellipse_list[i].BSe + GPb;
+
+                pe1 = ellipse_list[i].GPe.ptr<double>(0);
+                pe2 = ellipse_list[i].GPe.ptr<double>(1);
+
+                se1 = ellipse_list[i].BSe.ptr<double>(0);
+                se2 = ellipse_list[i].BSe.ptr<double>(1);
+                se1[0] = se1[0] + 50; // 50 cm boundary
+                se2[0] = se2[0] + 50; // 50 cm boundary
+            }
+            num_wp = 200 - currnet_index;
+            for ( i = 0; i < num_wp ; i++)
+            {
+                waypoint[i] = make_pair(poses[current_waypoint_index + i].pose.position.x, poses[current_waypoint_index].pose.position.y);
+            }
+            waypoint_checking(waypoints, waypoints_pub, ellipse_list, obj_count, num_wp);
+
+            }
+
+            last_calculation = ros::Time::now();
+            loop_count++;
+        }
+
         rate.sleep();
     }
 
