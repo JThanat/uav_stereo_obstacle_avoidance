@@ -18,6 +18,10 @@
 #include <sensor_msgs/image_encodings.h>
 #include <opencv2/imgproc/imgproc.hpp>
 
+using namespace cv;
+using namespace std;
+
+Mat disp;
 void image_cb(const sensor_msgs::ImageConstPtr& msg)
 {
     cv_bridge::CvImagePtr cv_ptr;
@@ -29,8 +33,7 @@ void image_cb(const sensor_msgs::ImageConstPtr& msg)
     {
         ROS_ERROR("Count not convert from '%s' to 'bgr8'. ", msg->encoding.c_str());
     }
-    // cv::imshow("view", cv_ptr-> image);
-    // cv::waitKey(0);
+    disp = cv_ptr->img;
 }
 
 mavros_msgs::State current_state;
@@ -78,9 +81,9 @@ int main(int argc, char **argv)
     ros::NodeHandle nh;
     cv::namedWindow("view");
     cv::startWindowThread();
-    std::vector<geometry_msgs::PoseStamped> poses(4);
+    std::vector<geometry_msgs::PoseStamped> poses(200);
     std::vector<geometry_msgs::PoseStamped> avoidingPath(3);
-    int i = 0;
+    int i,j,k;
     int avoidingIdx = 0;
     int avoidingSize = 3;
     bool armed = false;
@@ -94,7 +97,7 @@ int main(int argc, char **argv)
     ros::Subscriber pose_sub = nh.subscribe<geometry_msgs::PoseStamped>("/mavros/local_position/pose", 10, pose_cb);
 
     image_transport::ImageTransport it(nh);
-    image_transport::Subscriber sub = it.subscribe("/iris/camera_left/image_raw",1,image_cb);
+    image_transport::Subscriber disp_sub = it.subscribe("/stereo_msgs/DisparityImage",1,image_cb);
     //the setpoint publishing rate MUST be faster than 2Hz
     ros::Rate rate(20.0);
 
@@ -109,35 +112,12 @@ int main(int argc, char **argv)
     }
     ROS_INFO("set pose array");
 
-    // initial
-    poses[0].pose.position.x = 0;
-    poses[0].pose.position.y = 0;
-    poses[0].pose.position.z = 2;
-
-    // goal
-    poses[1].pose.position.x = 25;
-    poses[1].pose.position.y = 0;
-    poses[1].pose.position.z = 2;
-
-    // poses[2].pose.position.x = 5;
-    // poses[2].pose.position.y = 5;
-    // poses[2].pose.position.z = 2;
-
-    // poses[3].pose.position.x = 5;
-    // poses[3].pose.position.y = 0;
-    // poses[3].pose.position.z = 2;
-
-    avoidingPath[0].pose.position.x = 10;
-    avoidingPath[0].pose.position.y = 5;
-    avoidingPath[0].pose.position.z = 2;
-
-    avoidingPath[1].pose.position.x = 15;
-    avoidingPath[1].pose.position.y = 5;
-    avoidingPath[1].pose.position.z = 2;
-
-    avoidingPath[2].pose.position.x = 15;
-    avoidingPath[2].pose.position.y = 0;
-    avoidingPath[2].pose.position.z = 2;
+    for (i = 0; i < 200 ; i++)
+    {
+        poses[i].pose.position.x = 0.1*i;
+        poses[i].pose.position.y = 0.0;
+        poses[i].pose.position.z = 5.0;
+    }
 
     //send a few setpoints before starting
     for (int i = 100; ros::ok() && i > 0; --i)
