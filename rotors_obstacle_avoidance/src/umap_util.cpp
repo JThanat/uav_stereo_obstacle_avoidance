@@ -41,10 +41,11 @@ namespace umap_utility
         }
     }
 
-    vector<ellipse_desc> calculate_udisparity(Mat disp_img, int max_disp, Size image_size, int& ojb_count)
+    vector<ellipse_desc> calculate_udisparity(Mat disp_img, int max_disp, Size image_size, int& ojb_count, int loop_count)
     {
         int64 t;
         uint8_t *p;
+        char filename[50];
         int *cp, *connected_ptr;//finding neighbor pointer
         Mat uhist_vis = Mat::zeros(max_disp, image_size.width, CV_8UC1);
         Mat uline_mask = Mat::zeros(max_disp, image_size.width, CV_8UC1);
@@ -198,9 +199,12 @@ namespace umap_utility
 
         t = getTickCount() - t;
         cout << "Connect the Line Time elapsed: " << t * 1000 / getTickFrequency() << "ms" << endl;
-        imwrite("./uhist.jpg", uhist_vis);
-        imwrite("./group_rect.jpg", group_rect);
-        imwrite("./uline.jpg", uline_mask);
+        sprintf( filename, "./uhist%d.jpg", loop_count );
+        imwrite(filename, uhist_vis);
+        sprintf( filename, "./group_rect%d.jpg", loop_count ); 
+        imwrite(filename, group_rect);
+        sprintf( filename, "./uline%d.jpg", loop_count ); 
+        imwrite(filename, uline_mask);
 
         // return u1, u2, d1, d2 of each object
         

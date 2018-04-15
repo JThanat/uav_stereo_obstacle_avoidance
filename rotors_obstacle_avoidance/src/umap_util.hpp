@@ -27,5 +27,5 @@ namespace umap_utility
     };
     #endif /* INCLUDE_ELLIPSE_DESC */
     void add_neighbor(int i, int j, int dr, int dc, int maxr, int maxcol, Mat tmp_uline, Mat connected_component, queue< pair<int, int> > &neighbors, int mark);
-    vector<ellipse_desc> calculate_udisparity(Mat disp_img, int max_disp, Size image_size, int &obj_count);
+    vector<ellipse_desc> calculate_udisparity(Mat disp_img, int max_disp, Size image_size, int &obj_count, int loop_count);
 }

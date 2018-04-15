@@ -15,6 +15,11 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/calib3d/calib3d.hpp>
+#include <opencv2/calib3d/calib3d.hpp>
+#include <opencv2/imgcodecs.hpp>
+#include <opencv2/core/utility.hpp>
+
 #include <cv_bridge/cv_bridge.h>
 #include <image_transport/image_transport.h>
 #include <sensor_msgs/image_encodings.h>
@@ -22,8 +27,13 @@
 #include "umap_util.hpp"
 #include "wp_planning.hpp"
 
-cv::Mat disp;
-void image_cb(const sensor_msgs::ImageConstPtr& msg)
+using namespace std;
+using namespace umap_utility;
+using namespace wp;
+
+cv::Mat left_image;
+bool has_left_image = false;
+void image_cb_left(const sensor_msgs::ImageConstPtr& msg)
 {
     cv_bridge::CvImagePtr cv_ptr;
     try
@@ -34,9 +44,29 @@ void image_cb(const sensor_msgs::ImageConstPtr& msg)
     {
         ROS_ERROR("Count not convert from '%s' to 'bgr8'. ", msg->encoding.c_str());
     }
-    ROS_INFO("READING IMAGE");
-    disp = cv_ptr -> image;
+    // ROS_INFO("READING IMAGE");
+    left_image = cv_ptr->image;
+    has_left_image = true;
 }
+
+cv::Mat right_image;
+bool has_right_image = false;
+void image_cb_right(const sensor_msgs::ImageConstPtr& msg)
+{
+    cv_bridge::CvImagePtr cv_ptr;
+    try
+    {
+        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+    }
+    catch (cv_bridge:: Exception& e)
+    {
+        ROS_ERROR("Count not convert from '%s' to 'bgr8'. ", msg->encoding.c_str());
+    }
+    // ROS_INFO("READING IMAGE");
+    right_image = cv_ptr->image;
+    has_right_image = true;
+}
+
 
 mavros_msgs::State current_state;
 void state_cb(const mavros_msgs::State::ConstPtr &msg)
@@ -44,60 +74,68 @@ void state_cb(const mavros_msgs::State::ConstPtr &msg)
     current_state = *msg;
 }
 
-void isInCrashingZone();
-
 geometry_msgs::PoseStamped current_pose;
 void pose_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
 {
     current_pose = *msg;
-    isInCrashingZone();
 }
 
 bool checkEqualPose(const geometry_msgs::PoseStamped expectedPosition)
 {
     return (
-        std::abs(expectedPosition.pose.position.x - current_pose.pose.position.x) < 0.5 && 
-        std::abs(expectedPosition.pose.position.y - current_pose.pose.position.y) < 0.5 && 
-        std::abs(expectedPosition.pose.position.z - current_pose.pose.position.z) < 0.5
+        std::abs(expectedPosition.pose.position.x - current_pose.pose.position.x) < 0.1 && 
+        std::abs(expectedPosition.pose.position.y - current_pose.pose.position.y) < 0.1 && 
+        std::abs(expectedPosition.pose.position.z - current_pose.pose.position.z) < 0.1
     );
 }
 
-bool avoiding = false;
-void isInCrashingZone() {
-    // check if in crashing zone 
-    // hardcoded for now
-    geometry_msgs::PoseStamped dangerPose;
-    dangerPose.pose.position.x = 10;
-    dangerPose.pose.position.y = 0;
-    dangerPose.pose.position.z = 2;
-
-    if(dangerPose.pose.position.x - current_pose.pose.position.x < 4 && 
-    dangerPose.pose.position.x - current_pose.pose.position.x > 0 && !avoiding) {
-        avoiding = true;
-    }
-}
 
 int main(int argc, char **argv)
 {
+    enum
+    {
+        STEREO_BM = 0,
+        STEREO_SGBM = 1,
+        STEREO_HH = 2,
+        STEREO_VAR = 3,
+        STEREO_3WAY = 4
+    };
+
     ros::init(argc, argv, "offb_node");
     ros::NodeHandle nh;
-    cv::namedWindow("view");
-    cv::startWindowThread();
     std::vector<geometry_msgs::PoseStamped> poses(200);
+
+    int64 t;
+    char filename[50];
 
     double min, max;
     int i,j,k,current_x, current_y;
-    int avoidingIdx = 0;
-    int avoidingSize = 3;
+    int loop_count;
+    int SADWindowSize, numberOfDisparities, sgbmWinSize, cn;
+    cv::Size image_size;
+    
+    double f,b;
+
     int current_waypoint_index = 0;
     int num_wp = 0;
+    
     bool armed = false;
     bool enabled = false;
+
+    int obj_count;
     vector<ellipse_desc> ellipse_list;
     vector< pair<double, double> > waypoints(200);
     vector< pair<double, double> > waypoints_pub(200);
+    
+    cv::Mat disp(600,800, CV_8UC3);
     cv::Mat disp8(600,800, CV_8UC3);
+    cv::Mat obstacle_map(2000,3000, CV_8UC3);
 
+    double GYb;
+    double *pe1, *pe2, *se1, *se2;
+
+    int alg = STEREO_SGBM;
+    Ptr<StereoSGBM> sgbm = cv::StereoSGBM::create(0, 16, 3);
 
     ros::Subscriber state_sub = nh.subscribe<mavros_msgs::State>("mavros/state", 10, state_cb);
     ros::Publisher local_pos_pub = nh.advertise<geometry_msgs::PoseStamped>("mavros/setpoint_position/local", 10);
@@ -107,7 +145,8 @@ int main(int argc, char **argv)
     ros::Subscriber pose_sub = nh.subscribe<geometry_msgs::PoseStamped>("/mavros/local_position/pose", 10, pose_cb);
 
     image_transport::ImageTransport it(nh);
-    image_transport::Subscriber sub = it.subscribe("/iris/camera_left/image_raw",10,image_cb);
+    image_transport::Subscriber img_left_sub = it.subscribe("/iris/camera_left/image_raw",10,image_cb_left);
+    image_transport::Subscriber img_right_sub = it.subscribe("/iris/camera_right/image_raw",10,image_cb_right);
     //the setpoint publishing rate MUST be faster than 2Hz
     ros::Rate rate(20.0);
 
@@ -125,9 +164,9 @@ int main(int argc, char **argv)
     // mock up waypoint
     for (i = 0; i < 200 ; i++)
     {
-        poses[i].pose.position.x = 0.1*i;
+        poses[i].pose.position.x = 0.2*i;
         poses[i].pose.position.y = 0.0;
-        poses[i].pose.position.z = 5.0;
+        poses[i].pose.position.z = 2.0;
     }
 
     //send a few setpoints before starting
@@ -147,8 +186,13 @@ int main(int argc, char **argv)
     ros::Time last_request = ros::Time::now();
     ros::Time last_calculation;
     
+    f = 10.582677165; // in pixel 1 millimeter = 3.779528 pixel
+    b = 15;   // in cm
+
     loop_count = 0;
     last_calculation = ros::Time::now();
+    // if(current_state.mode == "OFFBOARD") enabled = true;
+    // if(current_state.armed) armed = true;
     while (ros::ok())
     {
         if (current_state.mode != "OFFBOARD" &&
@@ -185,30 +229,70 @@ int main(int argc, char **argv)
             ros::spinOnce();
         }
 
-        if(checkEqualPose(poses[current_waypoint_index]))
+        if(checkEqualPose(poses[current_waypoint_index]) && current_waypoint_index != 200)
         {
             current_waypoint_index++;
         }
 
-        if(loop_count == 0 || ros::Time::now() - last_calculation > 0.5)
+        if(loop_count == 0 || ros::Time::now() - last_calculation > ros::Duration(0.5))
         {
-            image_size = disp.size();
-            disp.convertTo(disp8, CV_8U);
-            minMaxLoc(disp8, &min, &max, NULL, NULL);
+            if(!enabled || !armed) continue;
+            if (!has_left_image || !has_right_image) continue;
+            image_size = left_image.size();
 
-            ellipse_list = calculate_udisparity(disp8, max, image_size, obj_count);
+            SADWindowSize = 3;
+            numberOfDisparities = 0;
 
-            current_x = poses[current_waypoint_index].pose.position.x; // need update
-            current_y = poses[current_waypoint_index].pose.position.y; // need update
+            sgbm->setPreFilterCap(63);
+            sgbmWinSize = SADWindowSize > 0 ? SADWindowSize : 3;
+            sgbm->setBlockSize(sgbmWinSize);
+            cn = left_image.channels();
+            // cn = cropped_left.channels();
+
+            // image_size = cropped_left.size();
+            numberOfDisparities = numberOfDisparities > 0 ? numberOfDisparities : ((image_size.width / 8) + 15) & -16;
+            sgbm->setP1(8 * cn * sgbmWinSize * sgbmWinSize);
+            sgbm->setP2(32 * cn * sgbmWinSize * sgbmWinSize);
+            sgbm->setMinDisparity(0);
+            sgbm->setNumDisparities(numberOfDisparities);
+            sgbm->setUniquenessRatio(10);
+            sgbm->setSpeckleWindowSize(100);
+            sgbm->setSpeckleRange(32);
+            sgbm->setDisp12MaxDiff(1);
+
+            sgbm->setMode(StereoSGBM::MODE_SGBM);
+
+            t = getTickCount();
+            sgbm->compute(left_image, right_image, disp);
+            t = getTickCount() - t;
+            printf("Disparity Time elapsed: %fms\n", t * 1000 / getTickFrequency());
+
+            if (alg != STEREO_VAR)
+                disp.convertTo(disp8, CV_8U, 255 / (numberOfDisparities * 16.));
+            else
+                disp.convertTo(disp8, CV_8U);
+            
+            sprintf( filename, "./disp%d.jpg", loop_count );
+            imwrite(filename, disp8);
+            cv::minMaxLoc(disp8, &min, &max, NULL, NULL);
+
+            ellipse_list = calculate_udisparity(disp8, max, image_size, obj_count, loop_count);
+
+            current_x = poses[current_waypoint_index].pose.position.x*100; // need update
+            current_y = poses[current_waypoint_index].pose.position.y*100; // need update
 
             GYb = 0; // 0 degree for now
+            Mat NXY = (Mat_<double>(2, 2) << cos(270 * M_PI / 180), -sin(270 * M_PI / 180), sin(270 * M_PI / 180), cos(270 * M_PI / 180));
             Mat GRb = (Mat_<double>(2, 2) << cos(GYb * M_PI / 180), -sin(GYb * M_PI / 180), sin(GYb * M_PI / 180), cos(GYb * M_PI / 180));
             Mat GPb = (Mat_<double>(2, 1) << current_x, current_y);
+            GPb = NXY * GPb;
+            GPb.ptr<double>(0)[0] = GPb.ptr<double>(0)[0] + 3000;
             
+            obstacle_map.setTo(cv::Scalar(0,0,0));
             for (i = 0; i < obj_count; ++i)
             {
-                ellipse_list[i].u1 = ellipse_list[i].u1; // set position of the drone at the center of the image
-                ellipse_list[i].u2 = ellipse_list[i].u2;
+                ellipse_list[i].u1 = ellipse_list[i].u1 - image_size.width/2; // set position of the drone at the center of the image
+                ellipse_list[i].u2 = ellipse_list[i].u2 - image_size.width/2;
                 ellipse_list[i].d1 = ellipse_list[i].d1/16;
                 ellipse_list[i].d2 = ellipse_list[i].d2/16;
 
@@ -226,19 +310,27 @@ int main(int argc, char **argv)
                 se2 = ellipse_list[i].BSe.ptr<double>(1);
                 se1[0] = se1[0] + 50; // 50 cm boundary
                 se2[0] = se2[0] + 50; // 50 cm boundary
+
+                ellipse(obstacle_map, Point(cvRound(pe1[0]),cvRound(2000 - pe2[0])), Size(cvRound(se1[0] - 50),cvRound(se2[0] - 50)), 0, 0, 360, Scalar(0,0,255),2);
+                ellipse(obstacle_map, Point(cvRound(pe1[0]),cvRound(2000 - pe2[0])), Size(cvRound(se1[0]),cvRound(se2[0])), 0, 0, 360, Scalar(0,255,0),2);
+                cout << "drawn: " << pe1[0] << " " << pe2[0] << " " << 2*se1[0] << " " << 2*se2[0] << endl;
             }
-            num_wp = 200 - currnet_index;
-            for ( i = 0; i < num_wp ; i++)
-            {
-                waypoint[i] = make_pair(poses[current_waypoint_index + i].pose.position.x, poses[current_waypoint_index].pose.position.y);
-            }
+            num_wp = 200 - current_waypoint_index;
             waypoint_checking(poses, ellipse_list, obj_count, num_wp, current_waypoint_index);
+            
+            for ( i = 0 ; i < num_wp - 1 ; i++)
+            {
+
+                line(obstacle_map, Point(cvRound(poses[current_waypoint_index+i].pose.position.y*100+3000), cvRound(2000 + poses[current_waypoint_index+i].pose.position.x*100)), Point(cvRound(poses[current_waypoint_index+i+1].pose.position.y*100 + 3000), cvRound(2000 + poses[current_waypoint_index+i+1].pose.position.x*100)), Scalar(0,0,255), 2);
             }
+            sprintf( filename, "./obstacle_map%d.jpg", loop_count );
+            imwrite(filename, obstacle_map);
 
             last_calculation = ros::Time::now();
             loop_count++;
-        }
-
+            }
+        local_pos_pub.publish(poses[current_waypoint_index]);
+        ros::spinOnce();
         rate.sleep();
     }
 

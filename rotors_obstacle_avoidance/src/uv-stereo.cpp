@@ -29,6 +29,7 @@ v                     v
 #include <stack> 
 #include <queue>
 #include <utility>
+#include <math.h> 
 
 #include "umap_util.hpp"
 #include "wp_planning.hpp"
@@ -73,6 +74,7 @@ int main(void)
     Mat camera_matrix[2], dist_coeffs[2];
     Mat rimg[2], cimg;
     Mat rmap[2][2];
+    Mat obstacle_map(2000, 6000, CV_8UC3);
     Rect validRoi[2];
 
     vector<Point2f> imagePoints[2];
