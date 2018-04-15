@@ -12,6 +12,27 @@
 #include <vector>
 #include <cmath>
 
+#include <opencv2/highgui/highgui.hpp>
+#include <cv_bridge/cv_bridge.h>
+#include <image_transport/image_transport.h>
+#include <sensor_msgs/image_encodings.h>
+#include <opencv2/imgproc/imgproc.hpp>
+
+void image_cb(const sensor_msgs::ImageConstPtr& msg)
+{
+    cv_bridge::CvImagePtr cv_ptr;
+    try
+    {
+        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+    }
+    catch (cv_bridge:: Exception& e)
+    {
+        ROS_ERROR("Count not convert from '%s' to 'bgr8'. ", msg->encoding.c_str());
+    }
+    // cv::imshow("view", cv_ptr-> image);
+    // cv::waitKey(0);
+}
+
 mavros_msgs::State current_state;
 void state_cb(const mavros_msgs::State::ConstPtr &msg)
 {
@@ -41,12 +62,12 @@ void isInCrashingZone() {
     // check if in crashing zone 
     // hardcoded for now
     geometry_msgs::PoseStamped dangerPose;
-    dangerPose.pose.position.x = 0;
-    dangerPose.pose.position.y = 10;
+    dangerPose.pose.position.x = 10;
+    dangerPose.pose.position.y = 0;
     dangerPose.pose.position.z = 2;
 
-    if(dangerPose.pose.position.y - current_pose.pose.position.y < 4 && 
-    dangerPose.pose.position.y - current_pose.pose.position.y > 0 && !avoiding) {
+    if(dangerPose.pose.position.x - current_pose.pose.position.x < 4 && 
+    dangerPose.pose.position.x - current_pose.pose.position.x > 0 && !avoiding) {
         avoiding = true;
     }
 }
@@ -55,6 +76,8 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, "offb_node");
     ros::NodeHandle nh;
+    cv::namedWindow("view");
+    cv::startWindowThread();
     std::vector<geometry_msgs::PoseStamped> poses(4);
     std::vector<geometry_msgs::PoseStamped> avoidingPath(3);
     int i = 0;
@@ -69,6 +92,9 @@ int main(int argc, char **argv)
     ros::ServiceClient set_mode_client = nh.serviceClient<mavros_msgs::SetMode>("mavros/set_mode");
 
     ros::Subscriber pose_sub = nh.subscribe<geometry_msgs::PoseStamped>("/mavros/local_position/pose", 10, pose_cb);
+
+    image_transport::ImageTransport it(nh);
+    image_transport::Subscriber sub = it.subscribe("/iris/camera_left/image_raw",1,image_cb);
     //the setpoint publishing rate MUST be faster than 2Hz
     ros::Rate rate(20.0);
 
@@ -89,8 +115,8 @@ int main(int argc, char **argv)
     poses[0].pose.position.z = 2;
 
     // goal
-    poses[1].pose.position.x = 0;
-    poses[1].pose.position.y = 25;
+    poses[1].pose.position.x = 25;
+    poses[1].pose.position.y = 0;
     poses[1].pose.position.z = 2;
 
     // poses[2].pose.position.x = 5;
@@ -101,16 +127,16 @@ int main(int argc, char **argv)
     // poses[3].pose.position.y = 0;
     // poses[3].pose.position.z = 2;
 
-    avoidingPath[0].pose.position.x = 5;
-    avoidingPath[0].pose.position.y = 10;
+    avoidingPath[0].pose.position.x = 10;
+    avoidingPath[0].pose.position.y = 5;
     avoidingPath[0].pose.position.z = 2;
 
-    avoidingPath[1].pose.position.x = 5;
-    avoidingPath[1].pose.position.y = 15;
+    avoidingPath[1].pose.position.x = 15;
+    avoidingPath[1].pose.position.y = 5;
     avoidingPath[1].pose.position.z = 2;
 
-    avoidingPath[2].pose.position.x = 2;
-    avoidingPath[2].pose.position.y = 15;
+    avoidingPath[2].pose.position.x = 15;
+    avoidingPath[2].pose.position.y = 0;
     avoidingPath[2].pose.position.z = 2;
 
     //send a few setpoints before starting
