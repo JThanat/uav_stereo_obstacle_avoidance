@@ -232,8 +232,7 @@ int main(int argc, char **argv)
             {
                 waypoint[i] = make_pair(poses[current_waypoint_index + i].pose.position.x, poses[current_waypoint_index].pose.position.y);
             }
-            waypoint_checking(waypoints, waypoints_pub, ellipse_list, obj_count, num_wp);
-
+            waypoint_checking(poses, ellipse_list, obj_count, num_wp, current_waypoint_index);
             }
 
             last_calculation = ros::Time::now();
