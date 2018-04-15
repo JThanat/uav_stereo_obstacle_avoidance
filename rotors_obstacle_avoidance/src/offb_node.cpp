@@ -13,11 +13,13 @@
 #include <cmath>
 
 #include <opencv2/highgui/highgui.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 #include <cv_bridge/cv_bridge.h>
 #include <image_transport/image_transport.h>
 #include <sensor_msgs/image_encodings.h>
-#include <opencv2/imgproc/imgproc.hpp>
 
+cv::Mat image_left;
 void image_cb(const sensor_msgs::ImageConstPtr& msg)
 {
     cv_bridge::CvImagePtr cv_ptr;
@@ -29,7 +31,9 @@ void image_cb(const sensor_msgs::ImageConstPtr& msg)
     {
         ROS_ERROR("Count not convert from '%s' to 'bgr8'. ", msg->encoding.c_str());
     }
-    // cv::imshow("view", cv_ptr-> image);
+    ROS_INFO("READING IMAGE");
+    image_left = cv_ptr -> image;
+    cv::imshow("view", image_left);
     // cv::waitKey(0);
 }
 
@@ -94,7 +98,7 @@ int main(int argc, char **argv)
     ros::Subscriber pose_sub = nh.subscribe<geometry_msgs::PoseStamped>("/mavros/local_position/pose", 10, pose_cb);
 
     image_transport::ImageTransport it(nh);
-    image_transport::Subscriber sub = it.subscribe("/iris/camera_left/image_raw",1,image_cb);
+    image_transport::Subscriber sub = it.subscribe("/iris/camera_left/image_raw",10,image_cb);
     //the setpoint publishing rate MUST be faster than 2Hz
     ros::Rate rate(20.0);
 
@@ -197,8 +201,9 @@ int main(int argc, char **argv)
             if(avoidingIdx == avoidingSize) {
                 avoiding = false;
                 continue;
-            }
-            if(checkEqualPose(avoidingPath[avoidingIdx])) {
+            } 
+            else if(checkEqualPose(avoidingPath[avoidingIdx])) 
+            {
                 avoidingIdx++;
             }
             local_pos_pub.publish(avoidingPath[avoidingIdx]);
