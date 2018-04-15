@@ -5,6 +5,8 @@
 #include <math.h> 
 #include <iostream>
 
+#include <geometry_msgs/PoseStamped.h>
+
 #include "umap_util.hpp"
 #include "wp_planning.hpp"
 
@@ -44,20 +46,20 @@ namespace wp
         return false;
     }
 
-    vector<iPair> waypoint_checking(vector<iPair> waypoints, vector<ellipse_desc> &obstacles, int obstacle_count)
+    void waypoint_checking(vector<geometry_msgs::PoseStamped>& poses, vector<ellipse_desc> &obstacles, int obstacle_count, int num_wp, int current_wp_idx)
     {
         int i, j, k, selected_index;
         double min_dist;
         double cur_dist = 0;
         double avoiding_dist = 10;
         queue<iPair> wps_to_check;
-        vector<iPair> waypoints_out;
+        // vector<iPair> waypoints_out;
         vector< vector<iPair> > allowed_wps(waypoints.size());
         iPair current_check_point, current_point;
-        current_point = waypoints[0];
-        for (i = 0; i < waypoints.size(); i++)
+        current_point = make_pair(poses[current_wp_idx].pose.position.x, poses[current_wp_idx].pose.position.y);
+        for (i = 0; i < num_wp; i++)
         {
-            wps_to_check.push(waypoints[i]);
+            wps_to_check.push(make_pair(poses[current_wp_idx+i].pose.position.x), poses[current_wp_idx+i].pose.position.y);
             while (!wps_to_check.empty())
             {
                 current_check_point = wps_to_check.front();
@@ -98,8 +100,8 @@ namespace wp
             }
             cur_dist = min_dist;
             current_point = allowed_wps[i][selected_index];
-            waypoints_out.push_back(current_point);
+            poses[current_wp_idx + i].pose.position.x = current_point.first;
+            poses[current_wp_idx + i].pose.position.y = current_point.second;
         }
-    return waypoints_out;
     }
 }
