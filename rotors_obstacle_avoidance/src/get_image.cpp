@@ -225,8 +225,8 @@ int main(int argc, char **argv)
 		sprintf(left_name, "%s%d.raw", "left", k+1);
 		sprintf(right_name, "%s%d.raw", "right", k+1);
 
-		FILE *f1 = fopen("img.raw", "w");
-		FILE *f2 = fopen("img2.raw", "w");
+		FILE *f1 = fopen(left_name, "w");
+		FILE *f2 = fopen(right_name, "w");
 
 		fwrite(buff1.m.userptr, c1->bytePerPixel, c1->width * c1->height, f1);
 		fwrite(buff2.m.userptr, c2->bytePerPixel, c2->width * c2->height, f2);
