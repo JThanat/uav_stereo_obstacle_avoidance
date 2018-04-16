@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <signal.h>
+#include <string.h>
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -31,7 +32,7 @@ void printError(char* errMsg){
 	exit(0);
 }
 
-flushBuffer()
+flushBuffer(void)
 {
 	uint8_t mode = 0;
 	uint8_t bits = 8;
