@@ -212,8 +212,14 @@ int main(int argc, char **argv)
 	{
 		// remove image from buff first
 		fprintf(stdout, "Flushing camera buffer\n");
-		getBufferTimeOut(c1, &buff1, 1);
-		getBufferTimeOut(c2, &buff2, 1);
+		if(getBufferTimeOut(c1, &buff1, 1) == 1)
+		{
+			pushBuffer(c1, &buff1);
+		}
+		if(getBufferTimeOut(c2, &buff2, 1) == 1)
+		{
+			pushBuffer(c2, &buff2);
+		}
 	}
 
 	fprintf(stdout, "Starting taking pictures\n");
