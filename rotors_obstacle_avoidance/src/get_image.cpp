@@ -169,6 +169,7 @@ int main(int argc, char **argv)
 	char right_name[50];
 	//resolution
 	//2432x1842
+	thread spi_thread(flushBuffer,250000); // signal every 250 ms
 	cameraState *c1 = init_camera(dev_name, 2432, 1842, 1, 3, 2);
 	cameraState *c2 = init_camera(dev_name2, 2432, 1842, 1, 3, 2);
 
@@ -218,8 +219,6 @@ int main(int argc, char **argv)
 		getBufferTimeOut(c1, &buff1, 1);
 		getBufferTimeOut(c2, &buff2, 1);
 	}
-
-	thread second (flushBuffer,250000); // signal every 250 ms
 
 	fprintf(stdout, "Starting taking pictures\n");
 	for (k = 0; k < 10; k++)
