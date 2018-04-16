@@ -124,6 +124,7 @@ int main(int argc, char **argv)
     bool ready = false;
 
     int obj_count;
+    int wp_gen = 200;
     vector<ellipse_desc> ellipse_list(20);
     vector< pair<double, double> > waypoints(200);
     vector< pair<double, double> > waypoints_pub(200);
@@ -163,7 +164,7 @@ int main(int argc, char **argv)
     ROS_INFO("set pose array");
 
     // mock up waypoint
-    for (i = 0; i < 100 ; i++)
+    for (i = 0; i < wp_gen ; i++)
     {
         poses[i].pose.position.x = 0.2*i;
         poses[i].pose.position.y = 0.0;
@@ -286,12 +287,12 @@ int main(int argc, char **argv)
             if (loop_count == 1)
             {
                 ROS_INFO("Mock up map");
-                image_size = Size(600,800);
+                image_size = Size(800,600);
                 obj_count = 1;
                 ellipse_list[0].u1 = 300;
                 ellipse_list[0].u2 = 500;
-                ellipse_list[0].d1 = 48.0;
-                ellipse_list[0].d2 = 36.0;
+                ellipse_list[0].d1 = 16.0;
+                ellipse_list[0].d2 = 14.4;
             } else {
                 ellipse_list = calculate_udisparity(disp8, max, image_size, obj_count, loop_count);
             }
@@ -326,14 +327,14 @@ int main(int argc, char **argv)
                 
                 se1 = ellipse_list[i].BSe.ptr<double>(0);
                 se2 = ellipse_list[i].BSe.ptr<double>(1);
-                se1[0] = se1[0] + 50; // 50 cm boundary
-                se2[0] = se2[0] + 50; // 50 cm boundary
+                se1[0] = se1[0] + 100; // 50 cm x boundary
+                se2[0] = se2[0] + 100; // 100 cm y boundary
                 
                 // cout << "drawn: " << pe1[0] << " " << pe2[0] << " " << 2*se1[0] << " " << 2*se2[0] << endl;
                 ellipse(obstacle_map, Point(cvRound(pe1[0] + 3000),cvRound(2000 - pe2[0])), Size(cvRound(se1[0] - 50),cvRound(se2[0] - 50)), 0, 0, 360, Scalar(0,0,255),2);
                 ellipse(obstacle_map, Point(cvRound(pe1[0] + 3000),cvRound(2000 - pe2[0])), Size(cvRound(se1[0]),cvRound(se2[0])), 0, 0, 360, Scalar(0,255,0),2);
             }
-            num_wp = 100 - current_waypoint_index;
+            num_wp = wp_gen - current_waypoint_index;
             waypoint_checking(poses, ellipse_list, obj_count, num_wp, current_waypoint_index);
             
             for ( i = 0 ; i < num_wp - 1 ; i++)
