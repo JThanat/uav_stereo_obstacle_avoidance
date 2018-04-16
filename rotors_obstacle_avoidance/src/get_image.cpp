@@ -201,7 +201,6 @@ int main(int argc, char **argv)
 
 	struct v4l2_buffer buff1;
 	struct v4l2_buffer buff2;
-	int k;
 
 	for (i = 0; i < 3; i++)
 	{
