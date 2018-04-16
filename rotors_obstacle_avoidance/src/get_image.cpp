@@ -159,6 +159,8 @@ int main(int argc, char **argv)
 	int i,j,k;
 	char *dev_name = "/dev/video0";
 	char *dev_name2 = "/dev/video1";
+	char left_name[50];
+	char right_name[50];
 	//resolution
 	//2432x1842
 	cameraState *c1 = init_camera(dev_name, 2432, 1842, 1, 3, 2);
@@ -218,6 +220,9 @@ int main(int argc, char **argv)
 
 		getBuffer(c1, &buff1);
 		getBuffer(c2, &buff2);
+
+		sprintf(left_name, "%s%d.raw", "left", k+1);
+		sprintf(right_name, "%s%d.raw", "right", k+1);
 
 		FILE *f1 = fopen("img.raw", "w");
 		FILE *f2 = fopen("img2.raw", "w");
