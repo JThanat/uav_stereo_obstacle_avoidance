@@ -121,15 +121,16 @@ int main(int argc, char **argv)
     
     bool armed = false;
     bool enabled = false;
+    bool ready = false;
 
     int obj_count;
-    vector<ellipse_desc> ellipse_list;
+    vector<ellipse_desc> ellipse_list(20);
     vector< pair<double, double> > waypoints(200);
     vector< pair<double, double> > waypoints_pub(200);
     
     cv::Mat disp(600,800, CV_8UC3);
     cv::Mat disp8(600,800, CV_8UC3);
-    cv::Mat obstacle_map(2000,3000, CV_8UC3);
+    cv::Mat obstacle_map(2000,6000, CV_8UC3);
 
     double GYb;
     double *pe1, *pe2, *se1, *se2;
@@ -162,7 +163,7 @@ int main(int argc, char **argv)
     ROS_INFO("set pose array");
 
     // mock up waypoint
-    for (i = 0; i < 200 ; i++)
+    for (i = 0; i < 100 ; i++)
     {
         poses[i].pose.position.x = 0.2*i;
         poses[i].pose.position.y = 0.0;
@@ -186,7 +187,7 @@ int main(int argc, char **argv)
     ros::Time last_request = ros::Time::now();
     ros::Time last_calculation;
     
-    f = 10.582677165; // in pixel 1 millimeter = 3.779528 pixel
+    f = 30; // in pixel 1 millimeter = 3.779528 pixel
     b = 15;   // in cm
 
     loop_count = 0;
@@ -229,12 +230,17 @@ int main(int argc, char **argv)
             ros::spinOnce();
         }
 
+        if (!ready && checkEqualPose(poses[0]))
+        {
+            ready = true;
+        }
+
         if(checkEqualPose(poses[current_waypoint_index]) && current_waypoint_index != 200)
         {
             current_waypoint_index++;
         }
 
-        if(loop_count == 0 || ros::Time::now() - last_calculation > ros::Duration(0.5))
+        if(ready && ros::Time::now() - last_calculation > ros::Duration(0.5))
         {
             if(!enabled || !armed) continue;
             if (!has_left_image || !has_right_image) continue;
@@ -275,53 +281,65 @@ int main(int argc, char **argv)
             sprintf( filename, "./disp%d.jpg", loop_count );
             imwrite(filename, disp8);
             cv::minMaxLoc(disp8, &min, &max, NULL, NULL);
-
-            ellipse_list = calculate_udisparity(disp8, max, image_size, obj_count, loop_count);
+            
+            // for mock up only
+            if (loop_count == 1)
+            {
+                ROS_INFO("Mock up map");
+                image_size = Size(600,800);
+                obj_count = 1;
+                ellipse_list[0].u1 = 300;
+                ellipse_list[0].u2 = 500;
+                ellipse_list[0].d1 = 48.0;
+                ellipse_list[0].d2 = 36.0;
+            } else {
+                ellipse_list = calculate_udisparity(disp8, max, image_size, obj_count, loop_count);
+            }
 
             current_x = poses[current_waypoint_index].pose.position.x*100; // need update
             current_y = poses[current_waypoint_index].pose.position.y*100; // need update
 
             GYb = 0; // 0 degree for now
-            Mat NXY = (Mat_<double>(2, 2) << cos(270 * M_PI / 180), -sin(270 * M_PI / 180), sin(270 * M_PI / 180), cos(270 * M_PI / 180));
+            Mat WRr = (Mat_<double>(2, 2) << cos(90 * M_PI / 180), -sin(90 * M_PI / 180), sin(90 * M_PI / 180), cos(90 * M_PI / 180));
             Mat GRb = (Mat_<double>(2, 2) << cos(GYb * M_PI / 180), -sin(GYb * M_PI / 180), sin(GYb * M_PI / 180), cos(GYb * M_PI / 180));
             Mat GPb = (Mat_<double>(2, 1) << current_x, current_y);
-            GPb = NXY * GPb;
-            GPb.ptr<double>(0)[0] = GPb.ptr<double>(0)[0] + 3000;
-            
+            GPb = WRr * GPb;
+            // GPb.ptr<double>(0)[0] = GPb.ptr<double>(0)[0] + 3000; // shift 3000 only for displaying purpose
+
             obstacle_map.setTo(cv::Scalar(0,0,0));
-            for (i = 0; i < obj_count; ++i)
+            for (i = 0; i < obj_count; i++)
             {
                 ellipse_list[i].u1 = ellipse_list[i].u1 - image_size.width/2; // set position of the drone at the center of the image
                 ellipse_list[i].u2 = ellipse_list[i].u2 - image_size.width/2;
                 ellipse_list[i].d1 = ellipse_list[i].d1/16;
                 ellipse_list[i].d2 = ellipse_list[i].d2/16;
-
+ 
                 ellipse_list[i].BPe = (Mat_<double>(2, 1) << b*(ellipse_list[i].u1 + ellipse_list[i].u2)/(2*ellipse_list[i].d2), f*b/(ellipse_list[i].d2));
                 ellipse_list[i].BSe = (Mat_<double>(2, 1) << b*(ellipse_list[i].u2 - ellipse_list[i].u1)/(2*ellipse_list[i].d2), f*b/(ellipse_list[i].d2) - f*b/(ellipse_list[i].d1));
                 ellipse_list[i].GYe = GYb;
                 ellipse_list[i].ESe = (Mat_<double>(2, 1) << b*(ellipse_list[i].u2 - ellipse_list[i].u1)/(2*ellipse_list[i].d2), f*b/(ellipse_list[i].d2) - f*b/(ellipse_list[i].d1));
                 ellipse_list[i].GPe = GRb * ellipse_list[i].BPe + GPb;
                 ellipse_list[i].GSe = GRb * ellipse_list[i].BSe + GPb;
-
+                
                 pe1 = ellipse_list[i].GPe.ptr<double>(0);
                 pe2 = ellipse_list[i].GPe.ptr<double>(1);
-
+                
                 se1 = ellipse_list[i].BSe.ptr<double>(0);
                 se2 = ellipse_list[i].BSe.ptr<double>(1);
                 se1[0] = se1[0] + 50; // 50 cm boundary
                 se2[0] = se2[0] + 50; // 50 cm boundary
-
-                ellipse(obstacle_map, Point(cvRound(pe1[0]),cvRound(2000 - pe2[0])), Size(cvRound(se1[0] - 50),cvRound(se2[0] - 50)), 0, 0, 360, Scalar(0,0,255),2);
-                ellipse(obstacle_map, Point(cvRound(pe1[0]),cvRound(2000 - pe2[0])), Size(cvRound(se1[0]),cvRound(se2[0])), 0, 0, 360, Scalar(0,255,0),2);
-                cout << "drawn: " << pe1[0] << " " << pe2[0] << " " << 2*se1[0] << " " << 2*se2[0] << endl;
+                
+                // cout << "drawn: " << pe1[0] << " " << pe2[0] << " " << 2*se1[0] << " " << 2*se2[0] << endl;
+                ellipse(obstacle_map, Point(cvRound(pe1[0] + 3000),cvRound(2000 - pe2[0])), Size(cvRound(se1[0] - 50),cvRound(se2[0] - 50)), 0, 0, 360, Scalar(0,0,255),2);
+                ellipse(obstacle_map, Point(cvRound(pe1[0] + 3000),cvRound(2000 - pe2[0])), Size(cvRound(se1[0]),cvRound(se2[0])), 0, 0, 360, Scalar(0,255,0),2);
             }
-            num_wp = 200 - current_waypoint_index;
+            num_wp = 100 - current_waypoint_index;
             waypoint_checking(poses, ellipse_list, obj_count, num_wp, current_waypoint_index);
             
             for ( i = 0 ; i < num_wp - 1 ; i++)
             {
-
-                line(obstacle_map, Point(cvRound(poses[current_waypoint_index+i].pose.position.y*100+3000), cvRound(2000 + poses[current_waypoint_index+i].pose.position.x*100)), Point(cvRound(poses[current_waypoint_index+i+1].pose.position.y*100 + 3000), cvRound(2000 + poses[current_waypoint_index+i+1].pose.position.x*100)), Scalar(0,0,255), 2);
+                cout << "waypoint" << " " << cvRound(-poses[current_waypoint_index+i].pose.position.y*100+3000) << " " << cvRound(2000 - poses[current_waypoint_index+i].pose.position.x*100) << " " << endl;
+                line(obstacle_map, Point(cvRound(-poses[current_waypoint_index+i].pose.position.y*100+3000), cvRound(2000 - poses[current_waypoint_index+i].pose.position.x*100)), Point(cvRound(-poses[current_waypoint_index+i+1].pose.position.y*100 + 3000), cvRound(2000 - poses[current_waypoint_index+i+1].pose.position.x*100)), Scalar(0,0,255), 2);
             }
             sprintf( filename, "./obstacle_map%d.jpg", loop_count );
             imwrite(filename, obstacle_map);

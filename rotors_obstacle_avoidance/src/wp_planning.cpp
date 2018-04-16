@@ -56,11 +56,11 @@ namespace wp
         // vector<iPair> waypoints_out;
         vector< vector<iPair> > allowed_wps(num_wp);
         iPair current_check_point, current_point;
-        // rotate from rotor x y to world x y by 270 degree thus [xw yw] <- [yr -xr]
-        current_point = make_pair(poses[current_wp_idx].pose.position.y*100, -poses[current_wp_idx].pose.position.x*100);
+        // rotate from rotor xr yr to world xw yw using [0 -1, 1 0] thus [xw yw] = [-yr xr]
+        current_point = make_pair(-poses[current_wp_idx].pose.position.y*100, poses[current_wp_idx].pose.position.x*100);
         for (i = 0; i < num_wp; i++)
         {
-            wps_to_check.push(make_pair(poses[current_wp_idx+i].pose.position.y*100, -poses[current_wp_idx+i].pose.position.x*100));
+            wps_to_check.push(make_pair(-poses[current_wp_idx+i].pose.position.y*100, poses[current_wp_idx+i].pose.position.x*100));
             while (!wps_to_check.empty())
             {
                 current_check_point = wps_to_check.front();
@@ -101,9 +101,9 @@ namespace wp
             }
             cur_dist = min_dist;
             current_point = allowed_wps[i][selected_index];
-            // rotate again by 90 from world to drone thus [xr yr] -> [-yw xw]
-            poses[current_wp_idx + i].pose.position.x = -current_point.second/100;
-            poses[current_wp_idx + i].pose.position.y = current_point.first/100;
+            // rotate again by 90 from world to drone thus [xr yr] -> [yw -xw]
+            poses[current_wp_idx + i].pose.position.x = current_point.second/100;
+            poses[current_wp_idx + i].pose.position.y = -current_point.first/100;
         }
     }
 }
