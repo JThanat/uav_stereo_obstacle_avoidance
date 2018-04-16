@@ -22,6 +22,15 @@
 
 #include "camera.h"
 
+using namespace std;
+
+void printError(char* errMsg){
+	fprintf(stderr,"%s\n", errMsg);
+	fprintf(stderr, "exiting\n");
+	fflush(stderr);
+	exit(0);
+}
+
 flushBuffer()
 {
 	uint8_t mode = 0;
@@ -147,8 +156,8 @@ flushBuffer()
 int main(int argc, char **argv)
 {
 	int i,j,k;
-	char *dev_name = "/dev/video0";
-	char *dev_name2 = "/dev/video1";
+	string dev_name = "/dev/video0";
+	string dev_name2 = "/dev/video1";
 	//resolution
 	//2432x1842
 	cameraState *c1 = init_camera(dev_name, 2432, 1842, 1, 3, 2);
