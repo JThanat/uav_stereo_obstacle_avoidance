@@ -36,8 +36,6 @@ void printError(char* errMsg){
 
 void flushBuffer(int delay)
 {
-
-	thread second (bar,0);
 	uint8_t mode = 0;
 	uint8_t bits = 8;
 	uint32_t speed = 25000000 / 4;
@@ -221,7 +219,7 @@ int main(int argc, char **argv)
 		getBufferTimeOut(c2, &buff2, 1);
 	}
 
-	std::thread second (flushBuffer,250000); // signal every 250 ms
+	thread second (flushBuffer,250000); // signal every 250 ms
 
 	fprintf(stdout, "Starting taking pictures\n");
 	for (k = 0; k < 10; k++)
