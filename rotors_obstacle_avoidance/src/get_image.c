@@ -87,7 +87,7 @@ flushBuffer()
 
 	ret = ioctl(fd, SPI_IOC_RD_MAX_SPEED_HZ, &speed);
 	if (ret == -1)
-			printError("can't get max speed hz");
+		printError("can't get max speed hz");
 
 	printf("spi mode: %d\n", mode);
 	printf("bits per word: %d\n", bits);
@@ -98,7 +98,9 @@ flushBuffer()
 	uint8_t expoHigh = exposure >> 8;
 	uint8_t expoLow = exposure % 256;
 	uint8_t *rx = (uint8_t *)malloc(4 * sizeof(uint8_t));
-	struct spi_ioc_transfer tr{};
+	struct spi_ioc_transfer tr
+	{
+	};
 
 	gpio_fd = -1;
 
@@ -114,8 +116,8 @@ flushBuffer()
 
 	usleep(20000); //wait for 20 milliseconds
 
-	tx[0] = 0x90;     //command, 0x90 is set trigger.
-	tx[1] = 0x00;     //trigger offset
+	tx[0] = 0x90;	 //command, 0x90 is set trigger.
+	tx[1] = 0x00;	 //trigger offset
 	tx[2] = expoHigh; // tx[2][3:0] is exposure[11:8].
 	tx[3] = expoLow;  // tx[3][7:0] is exposure[7:0].
 	tr.tx_buf = (unsigned long)tx;
@@ -132,7 +134,7 @@ flushBuffer()
 	gpio_fd = fopen(gpioName, "w");
 	if (gpio_fd == NULL)
 	{
-			printError("Can't open GPIO, you may not have enough privilege");
+		printError("Can't open GPIO, you may not have enough privilege");
 	}
 
 	fwrite("1", sizeof(char), 1, gpio_fd);
@@ -193,23 +195,23 @@ int main(int argc, char **argv)
 
 	void *hostBuffer = malloc(c1->width * c1->height * c1->bytePerPixel * 5);
 	void *hostBuffer2 = malloc(c2->width * c2->height * c2->bytePerPixel * 5);
-	
+
 	struct v4l2_buffer buff1;
 	struct v4l2_buffer buff2;
 	int k;
 
-	for(i = 0 ; i < 3 ; i++)
+	for (i = 0; i < 3; i++)
 	{
-		// remove image from buff first 
-		getBufferTimeOut(c1, buff1, 1);
-		getBufferTimeOut(c2, buff2, 1);
+		// remove image from buff first
+		getBufferTimeOut(c1, &buff1, 1);
+		getBufferTimeOut(c2, &buff2, 1);
 	}
 
 	fprintf(stdout, "Starting taking pictures\n");
 	for (k = 0; k < 10; k++)
 	{
 		flushBuffer();
-		
+
 		getBuffer(c1, &buff1);
 		getBuffer(c2, &buff2);
 
