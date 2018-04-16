@@ -32,7 +32,7 @@ void printError(char* errMsg){
 	exit(0);
 }
 
-flushBuffer(void)
+void flushBuffer(void)
 {
 	uint8_t mode = 0;
 	uint8_t bits = 8;
