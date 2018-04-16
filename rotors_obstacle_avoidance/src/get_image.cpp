@@ -2,10 +2,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <malloc.h>
-#include <string.h>
 #include <stdint.h>
 #include <signal.h>
-#include <string>
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -24,8 +22,6 @@
 #include "camera.h"
 
 #include <thread> 
-
-using namespace std;
 
 void printError(char* errMsg){
 	fprintf(stderr,"%s\n", errMsg);
@@ -169,7 +165,7 @@ int main(int argc, char **argv)
 	char right_name[50];
 	//resolution
 	//2432x1842
-	thread spi_thread(flushBuffer,250000); // signal every 250 ms
+	std::thread spi_thread(flushBuffer,250000); // signal every 250 ms
 	cameraState *c1 = init_camera(dev_name, 2432, 1842, 1, 3, 2);
 	cameraState *c2 = init_camera(dev_name2, 2432, 1842, 1, 3, 2);
 
