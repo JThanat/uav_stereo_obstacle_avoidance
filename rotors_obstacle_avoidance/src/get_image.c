@@ -150,6 +150,7 @@ flushBuffer()
 
 int main(int argc, char **argv)
 {
+	int i,j,k;
 	char *dev_name = "/dev/video0";
 	char *dev_name2 = "/dev/video1";
 	//resolution
@@ -183,8 +184,8 @@ int main(int argc, char **argv)
 
 	// Set Contrast to 1
 	v4l2SetControl(c1, V4L2_CID_CONTRAST, 1);
-	control_val1 = v4l2GetControl(c1, V4L2_CID_CONTRAST);
-	fprintf(stderr, "set value:%d\n", control_val1);
+	control_val = v4l2GetControl(c1, V4L2_CID_CONTRAST);
+	fprintf(stderr, "set value:%d\n", control_val);
 
 	v4l2SetControl(c2, V4L2_CID_CONTRAST, 1);
 	control_val2 = v4l2GetControl(c2, V4L2_CID_CONTRAST);
