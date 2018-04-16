@@ -38,7 +38,7 @@ void flushBuffer(int delay)
 {
 	while(true)
 	{
-		std::thread second (bar,0);
+		thread second (bar,0);
 		uint8_t mode = 0;
 		uint8_t bits = 8;
 		uint32_t speed = 25000000 / 4;
