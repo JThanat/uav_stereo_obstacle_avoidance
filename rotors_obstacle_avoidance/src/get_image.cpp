@@ -5,7 +5,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <signal.h>
-#include <string.h>
+#include <string>
 
 #include <sys/stat.h>
 #include <sys/types.h>
