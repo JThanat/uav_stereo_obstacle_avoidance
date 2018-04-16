@@ -22,10 +22,6 @@
 
 #include "camera.h"
 
-#include <linux/types.h>
-#include <linux/spi/spidev.h>
-#include <linux/videodev2.h>
-
 flushBuffer()
 {
 	uint8_t mode = 0;
