@@ -206,6 +206,7 @@ int main(int argc, char **argv)
 	for (i = 0; i < 3; i++)
 	{
 		// remove image from buff first
+		fprintf(stdout, "Flushing camera buffer\n");
 		getBufferTimeOut(c1, &buff1, 1);
 		getBufferTimeOut(c2, &buff2, 1);
 	}
@@ -223,7 +224,8 @@ int main(int argc, char **argv)
 
 		fwrite(buff1.m.userptr, c1->bytePerPixel, c1->width * c1->height, f1);
 		fwrite(buff2.m.userptr, c2->bytePerPixel, c2->width * c2->height, f2);
-
+		
+		fprintf(stdout, "Finish writing buffer\n");
 		pushBuffer(c1, &buff1);
 		pushBuffer(c2, &buff2);
 
