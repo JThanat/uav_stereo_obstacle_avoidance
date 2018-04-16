@@ -16,7 +16,6 @@
 #include <linux/videodev2.h>
 #include <fcntl.h>
 
-#include <unistd.h>
 #include <getopt.h>
 #include <syslog.h>
 #include <math.h>
@@ -98,9 +97,6 @@ flushBuffer()
 	uint8_t expoHigh = exposure >> 8;
 	uint8_t expoLow = exposure % 256;
 	uint8_t *rx = (uint8_t *)malloc(4 * sizeof(uint8_t));
-	struct spi_ioc_transfer tr
-	{
-	};
 
 	gpio_fd = -1;
 
@@ -120,12 +116,13 @@ flushBuffer()
 	tx[1] = 0x00;	 //trigger offset
 	tx[2] = expoHigh; // tx[2][3:0] is exposure[11:8].
 	tx[3] = expoLow;  // tx[3][7:0] is exposure[7:0].
-	tr.tx_buf = (unsigned long)tx;
-	tr.rx_buf = (unsigned long)rx;
-	tr.len = 4;
-	tr.delay_usecs = delay;
-	tr.speed_hz = speed;
-	tr.bits_per_word = bits;
+	struct spi_ioc_transfer tr{};
+		tr.tx_buf = (unsigned long)tx;
+		tr.rx_buf = (unsigned long)rx;
+		tr.len = 4;
+		tr.delay_usecs = delay;
+		tr.speed_hz = speed;
+		tr.bits_per_word = bits;
 	ret = ioctl(fd, SPI_IOC_MESSAGE(1), &tr);
 	usleep(20000); //wait for 20 milliseconds
 
