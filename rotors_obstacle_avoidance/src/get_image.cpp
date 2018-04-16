@@ -157,8 +157,8 @@ flushBuffer(void)
 int main(int argc, char **argv)
 {
 	int i,j,k;
-	string dev_name = "/dev/video0";
-	string dev_name2 = "/dev/video1";
+	char *dev_name = "/dev/video0";
+	char *dev_name2 = "/dev/video1";
 	//resolution
 	//2432x1842
 	cameraState *c1 = init_camera(dev_name, 2432, 1842, 1, 3, 2);
