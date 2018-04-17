@@ -23,10 +23,8 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "offb_node");
     ros::NodeHandle nh;
 
-    ros::Subscriber state_sub = nh.subscribe
-            ("mavros/state", 10, state_cb);
-    ros::Publisher local_pos_pub = nh.advertise
-            ("mavros/setpoint_position/local", 10);
+    ros::Subscriber state_sub = nh.subscribe<mavros_msgs::State>("mavros/state", 10, state_cb);
+    ros::Publisher local_pos_pub = nh.advertise<geometry_msgs::PoseStamped>("mavros/setpoint_position/local", 10);
 
     //the setpoint publishing rate MUST be faster than 2Hz
     ros::Rate rate(20.0);
@@ -55,17 +53,52 @@ int main(int argc, char **argv)
     ros::Time last_request = ros::Time::now();
 
     while(ros::ok()){
+
+        if (current_state.mode == "LOITER")
+        {
+            continue;
+        }
+
+        if (current_state.mode != "GUIDED" && current_state.mode == "AUTO" &&
+            (ros::Time::now() - last_request > ros::Duration(5.0)))
+        {
+            if (set_mode_client.call(offb_set_mode) &&
+                offb_set_mode.response.mode_sent)
+            {
+                ROS_INFO("GUIDED enabled");
+                enabled = true;
+            }
+            last_request = ros::Time::now();
+        }
+        else
+        {
+            if (current_state.mode == "GUIDED") {
+                enabled = true;
+            }
+            if (!current_state.armed &&
+                (ros::Time::now() - last_request > ros::Duration(5.0)))
+            {
+                if (arming_client.call(arm_cmd) &&
+                    arm_cmd.response.success)
+                {
+                    ROS_INFO("Vehicle armed");
+                    armed = true;
+                }
+                last_request = ros::Time::now();
+            }
+        }
+
         theta = wn*count*0.05;
 
-            pose.pose.position.x = r*sin(theta);
-            pose.pose.position.y = r*cos(theta);
-            pose.pose.position.z = 5;
+        pose.pose.position.x = r*sin(theta);
+        pose.pose.position.y = r*cos(theta);
+        pose.pose.position.z = 5;
 
         count++;
 
-            local_pos_pub.publish(pose);
-            ros::spinOnce();
-            rate.sleep();
+        local_pos_pub.publish(pose);
+        ros::spinOnce();
+        rate.sleep();
     }
 
     return 0;
