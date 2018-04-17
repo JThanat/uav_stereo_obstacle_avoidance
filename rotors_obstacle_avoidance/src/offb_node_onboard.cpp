@@ -24,7 +24,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
-#include <opencv2/imgcodecs.hpp>
+// #include <opencv2/imgcodecs.hpp>
 #include <opencv2/core/utility.hpp>
 
 #include <cv_bridge/cv_bridge.h>
@@ -228,9 +228,6 @@ int main(int argc, char **argv)
 
     ros::Subscriber pose_sub = nh.subscribe<geometry_msgs::PoseStamped>("/mavros/local_position/pose", 10, pose_cb);
 
-    image_transport::ImageTransport it(nh);
-    image_transport::Subscriber img_left_sub = it.subscribe("/iris/camera_left/image_raw",10,image_cb_left);
-    image_transport::Subscriber img_right_sub = it.subscribe("/iris/camera_right/image_raw",10,image_cb_right);
     //the setpoint publishing rate MUST be faster than 2Hz
     ros::Rate rate(20.0);
 
@@ -338,11 +335,11 @@ int main(int argc, char **argv)
             pushBuffer(c2, &buff2);
             
             // getting image
-            imwrite('./left_image_16C.jpg', left_image);
+            cv::imwrite('./left_image_16C.jpg', left_image);
             t = getTickCount();
             left_image.convertTo(left_image, CV_8UC1, 1);
             right_image.convertTo(right_image, CV_8UC1, 1);
-            imwrite('./left_image.jpg', left_image);
+            cv::imwrite('./left_image.jpg', left_image);
             for (i = 0 ; i < left_image.rows/2 ; i++)
             {
                 ib = i*2;
@@ -370,7 +367,7 @@ int main(int argc, char **argv)
             }
             t = getTickCount() - t;
             printf("loop debayer time: %fms\n", t * 1000 / getTickFrequency());
-            imwrite('./left_debayer.jpg', left_image_debayer);
+            cv::imwrite('./left_debayer.jpg', left_image_debayer);
 
             // rectify
             // set up other values
@@ -429,7 +426,7 @@ int main(int argc, char **argv)
                 disp.convertTo(disp8, CV_8U);
             
             sprintf( filename, "./disp%d.jpg", loop_count );
-            imwrite(filename, disp8);
+            cv::imwrite(filename, disp8);
             cv::minMaxLoc(disp8, &min, &max, NULL, NULL);
             
             // for mock up only
@@ -492,7 +489,7 @@ int main(int argc, char **argv)
                 line(obstacle_map, Point(cvRound(-poses[current_waypoint_index+i].pose.position.y*100+3000), cvRound(2000 - poses[current_waypoint_index+i].pose.position.x*100)), Point(cvRound(-poses[current_waypoint_index+i+1].pose.position.y*100 + 3000), cvRound(2000 - poses[current_waypoint_index+i+1].pose.position.x*100)), Scalar(0,0,255), 2);
             }
             sprintf( filename, "./obstacle_map%d.jpg", loop_count );
-            imwrite(filename, obstacle_map);
+            cv::imwrite(filename, obstacle_map);
 
             last_calculation = ros::Time::now();
             loop_count++;
