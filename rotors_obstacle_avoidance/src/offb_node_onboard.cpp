@@ -329,11 +329,11 @@ int main(int argc, char **argv)
             pushBuffer(c2, &buff2);
             
             // getting image
-            imwrite("./left_image_16C.jpg", left_image);
+            imwrite("/home/ubuntu/img_log/left_image_16C.jpg", left_image);
             t = getTickCount();
             left_image.convertTo(left_image, CV_8UC1, 1);
             right_image.convertTo(right_image, CV_8UC1, 1);
-            imwrite("./left_image.jpg", left_image);
+            imwrite("/home/ubuntu/img_log/left_image.jpg", left_image);
             for (i = 0 ; i < left_image.rows/2 ; i++)
             {
                 ib = i*2;
@@ -361,7 +361,7 @@ int main(int argc, char **argv)
             }
             t = getTickCount() - t;
             printf("loop debayer time: %fms\n", t * 1000 / getTickFrequency());
-            imwrite("./left_debayer.jpg", left_image_debayer);
+            imwrite("/home/ubuntu/img_log/left_debayer.jpg", left_image_debayer);
 
             // rectify
             // set up other values
@@ -419,7 +419,7 @@ int main(int argc, char **argv)
             else
                 disp.convertTo(disp8, CV_8U);
             
-            sprintf( filename, "./disp%d.jpg", loop_count );
+            sprintf( filename, "/home/ubuntu/img_log/disp%d.jpg", loop_count );
             imwrite(filename, disp8);
             minMaxLoc(disp8, &min, &max, NULL, NULL);
             
@@ -482,7 +482,7 @@ int main(int argc, char **argv)
                 cout << "waypoint" << " " << cvRound(-poses[current_waypoint_index+i].pose.position.y*100+3000) << " " << cvRound(2000 - poses[current_waypoint_index+i].pose.position.x*100) << " " << endl;
                 line(obstacle_map, Point(cvRound(-poses[current_waypoint_index+i].pose.position.y*100+3000), cvRound(2000 - poses[current_waypoint_index+i].pose.position.x*100)), Point(cvRound(-poses[current_waypoint_index+i+1].pose.position.y*100 + 3000), cvRound(2000 - poses[current_waypoint_index+i+1].pose.position.x*100)), Scalar(0,0,255), 2);
             }
-            sprintf( filename, "./obstacle_map%d.jpg", loop_count );
+            sprintf( filename, "/home/ubuntu/img_log/obstacle_map%d.jpg", loop_count );
             imwrite(filename, obstacle_map);
 
             last_calculation = ros::Time::now();
