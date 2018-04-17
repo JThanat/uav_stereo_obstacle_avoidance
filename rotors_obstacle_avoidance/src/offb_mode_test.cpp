@@ -33,8 +33,6 @@ int main(int argc, char **argv)
     ros::Rate rate(20.0);
     
 
-    nh.param("pub_setpoints_traj/wn", wn, 1.0);
-	nh.param("pub_setpoints_traj/r", r, 1.0);
     // wait for FCU connection
     while(ros::ok() && current_state.connected){
         ros::spinOnce();
@@ -55,35 +53,26 @@ int main(int argc, char **argv)
 
     ros::Time last_request = ros::Time::now();
 
-    while(ros::ok()) {
+    while(ros::ok()){
 
         if (current_state.mode != "GUIDED")
         {
-            ROS_INFO("Vehicle is not in GUIDED Mode");
+            ROS_INFO("Vehicle is not in GUIDED MODE, cannot override position");
             continue;
         }
-        else
+        else 
         {
-            if (!current_state.armed &&
-                (ros::Time::now() - last_request > ros::Duration(5.0)))
+            if (!current_state.armed)
             {
-                if (arming_client.call(arm_cmd) &&
-                    arm_cmd.response.success)
-                {
-                    ROS_INFO("Vehicle armed");
-                }
-                last_request = ros::Time::now();
+                ROS_INFO("Vehicle not armed");
             }
-
+            else
+            {
+                ROS_INFO("Vehicle armed");
+            }
         }
 
-        pose.pose.position.x = r*sin(theta);
-        pose.pose.position.y = r*cos(theta);
-        pose.pose.position.z = 5;
-
-        local_pos_pub.publish(pose);
-        ros::spinOnce();
-        rate.sleep();
+        
     }
 
     return 0;
