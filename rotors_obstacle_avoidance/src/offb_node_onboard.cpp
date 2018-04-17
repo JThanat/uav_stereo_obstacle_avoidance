@@ -396,7 +396,7 @@ int main(int argc, char **argv)
             SADWindowSize = 3;
             numberOfDisparities = 0;
 
-            sgbm.setPreFilterCap(63);
+            sgbm.preFilterCap = 63;
             sgbm.SADWindowSize = SADWindowSize > 0 ? SADWindowSize : 3;
             // cn = left_image.channels();
             cn = cropped_left.channels();
