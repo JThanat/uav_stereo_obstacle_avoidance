@@ -276,23 +276,17 @@ int main(int argc, char **argv)
     // if(current_state.armed) armed = true;
     while (ros::ok())
     {
-        if (current_state.mode != "OFFBOARD" &&
-            (ros::Time::now() - last_request > ros::Duration(5.0)))
-        {
-            if (set_mode_client.call(offb_set_mode) &&
-                offb_set_mode.response.mode_sent)
-            {
-                ROS_INFO("Offboard enabled");
-                enabled = true;
-            }
-            last_request = ros::Time::now();
+        if (current_state.mode != "GUIDED")
+        {   
+            enabled = false;
+            rate.sleep();
+            continue;
         }
         else
         {
-            if (current_state.mode == "OFFBOARD") {
-                enabled = true;
-            }
-            if (!current_state.armed &&
+            enabled = true;
+            if (current_state.armed) armed = true;
+            else if (!current_state.armed &&
                 (ros::Time::now() - last_request > ros::Duration(5.0)))
             {
                 if (arming_client.call(arm_cmd) &&
