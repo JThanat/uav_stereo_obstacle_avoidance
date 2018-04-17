@@ -69,15 +69,11 @@ int main(int argc, char **argv)
                 offb_set_mode.response.mode_sent)
             {
                 ROS_INFO("GUIDED enabled");
-                enabled = true;
             }
             last_request = ros::Time::now();
         }
         else
         {
-            if (current_state.mode == "GUIDED") {
-                enabled = true;
-            }
             if (!current_state.armed &&
                 (ros::Time::now() - last_request > ros::Duration(5.0)))
             {
@@ -85,7 +81,6 @@ int main(int argc, char **argv)
                     arm_cmd.response.success)
                 {
                     ROS_INFO("Vehicle armed");
-                    armed = true;
                 }
                 last_request = ros::Time::now();
             }
