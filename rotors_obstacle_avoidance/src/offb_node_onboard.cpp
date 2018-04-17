@@ -38,6 +38,7 @@ extern "C" {
 using namespace std;
 using namespace umap_utility;
 using namespace wp;
+using namespace cv;
 
 mavros_msgs::State current_state;
 void state_cb(const mavros_msgs::State::ConstPtr &msg)
@@ -82,8 +83,8 @@ int main(int argc, char **argv)
     int i,j,k,current_x, current_y;
     int loop_count;
     int SADWindowSize, numberOfDisparities, sgbmWinSize, cn;
-    cv::Size image_size(2432, 1842);
-    
+    Size image_size(2432, 1842);
+
     double f,b;
 
     int current_waypoint_index = 0;
@@ -101,20 +102,20 @@ int main(int argc, char **argv)
     
     int framesize = image_size.width*image_size.height;
 
-    cv::Mat left_image(1842, 2432, CV_16UC1);
-    cv::Mat right_image(1842, 2432, CV_16UC1);
-    cv::Mat left_image_debayer(921, 1216, CV_8UC1);
-    cv::Mat right_image_debayer(921, 1216, CV_8UC1);
-    cv::Mat disp(600,800, CV_8UC3);
-    cv::Mat disp8(600,800, CV_8UC3);
-    cv::Mat obstacle_map(2000,6000, CV_8UC3);
+    Mat left_image(1842, 2432, CV_16UC1);
+    Mat right_image(1842, 2432, CV_16UC1);
+    Mat left_image_debayer(921, 1216, CV_8UC1);
+    Mat right_image_debayer(921, 1216, CV_8UC1);
+    Mat disp(600,800, CV_8UC3);
+    Mat disp8(600,800, CV_8UC3);
+    Mat obstacle_map(2000,6000, CV_8UC3);
 
-    cv::Mat R, T, R1, R2, P1, P2, Q;
-    cv::Mat cropped_left, cropped_right;
-    cv::Mat camera_matrix[2], dist_coeffs[2];
-    cv::Mat rimg[2], cimg;
-    cv::Mat rmap[2][2];
-    cv::Rect validRoi[2];
+    Mat R, T, R1, R2, P1, P2, Q;
+    Mat cropped_left, cropped_right;
+    Mat camera_matrix[2], dist_coeffs[2];
+    Mat rimg[2], cimg;
+    Mat rmap[2][2];
+    Rect validRoi[2];
     int VROIX, VROIY, VROIW, VROIH;
     int sf, w, h;
 
@@ -124,14 +125,15 @@ int main(int argc, char **argv)
     int red,green,blue;
     int ib, jb;
 
-    FileStorage fs("./extrinsics.yml", FileStorage::READ);
+    FileStorage fs("./extrinsics.yml", CV_STORAGE_READ);
     
 
     double GYb;
     double *pe1, *pe2, *se1, *se2;
 
     int alg = STEREO_SGBM;
-    Ptr<StereoSGBM> sgbm = cv::StereoSGBM::create(0, 16, 3);
+    StereoSGBM sgbm;
+    // Ptr<StereoSGBM> sgbm = StereoSGBM::create(0, 16, 3);
 
     char *dev_name = "/dev/video0";
 	char *dev_name2 = "/dev/video1";
@@ -159,7 +161,7 @@ int main(int argc, char **argv)
         cout << "Error: can not read the extrinsic parameters\n";
 
     // Setup Intrinsics Camera Matrix
-    fs.open("./intrinsics.yml", FileStorage::READ);
+    fs.open("./intrinsics.yml", CV_STORAGE_READ);
     if (fs.isOpened())
     {
         fs["M1"] >> camera_matrix[0];
@@ -333,11 +335,11 @@ int main(int argc, char **argv)
             pushBuffer(c2, &buff2);
             
             // getting image
-            cv::imwrite("./left_image_16C.jpg", left_image);
+            imwrite("./left_image_16C.jpg", left_image);
             t = getTickCount();
             left_image.convertTo(left_image, CV_8UC1, 1);
             right_image.convertTo(right_image, CV_8UC1, 1);
-            cv::imwrite("./left_image.jpg", left_image);
+            imwrite("./left_image.jpg", left_image);
             for (i = 0 ; i < left_image.rows/2 ; i++)
             {
                 ib = i*2;
@@ -365,7 +367,7 @@ int main(int argc, char **argv)
             }
             t = getTickCount() - t;
             printf("loop debayer time: %fms\n", t * 1000 / getTickFrequency());
-            cv::imwrite("./left_debayer.jpg", left_image_debayer);
+            imwrite("./left_debayer.jpg", left_image_debayer);
 
             // rectify
             // set up other values
@@ -394,27 +396,27 @@ int main(int argc, char **argv)
             SADWindowSize = 3;
             numberOfDisparities = 0;
 
-            sgbm->setPreFilterCap(63);
-            sgbmWinSize = SADWindowSize > 0 ? SADWindowSize : 3;
-            sgbm->setBlockSize(sgbmWinSize);
+            sgbm.setPreFilterCap(63);
+            sgbm.SADWindowSize = SADWindowSize > 0 ? SADWindowSize : 3;
             // cn = left_image.channels();
             cn = cropped_left.channels();
 
             image_size = cropped_left.size();
             numberOfDisparities = numberOfDisparities > 0 ? numberOfDisparities : ((image_size.width / 8) + 15) & -16;
-            sgbm->setP1(8 * cn * sgbmWinSize * sgbmWinSize);
-            sgbm->setP2(32 * cn * sgbmWinSize * sgbmWinSize);
-            sgbm->setMinDisparity(0);
-            sgbm->setNumDisparities(numberOfDisparities);
-            sgbm->setUniquenessRatio(10);
-            sgbm->setSpeckleWindowSize(100);
-            sgbm->setSpeckleRange(32);
-            sgbm->setDisp12MaxDiff(1);
+            sgbm.P1 = 8*cn*sgbm.SADWindowSize*sgbm.SADWindowSize;
+            sgbm.P2 = 32*cn*sgbm.SADWindowSize*sgbm.SADWindowSize;
+            sgbm.minDisparity = 0;
+            sgbm.numberOfDisparities = numberOfDisparities;
+            sgbm.uniquenessRatio = 10;
+            sgbm.speckleWindowSize = 100;
+            sgbm.speckleRange = 32;
+            sgbm.disp12MaxDiff = 1;
+            sgbm.fullDP = alg == STEREO_HH;
 
-            sgbm->setMode(StereoSGBM::MODE_SGBM);
+            // sgbm.setMode(StereoSGBM::MODE_SGBM);
 
             t = getTickCount();
-            sgbm->compute(left_image, right_image, disp);
+            sgbm(left_image, right_image, disp);
             t = getTickCount() - t;
             printf("Disparity Time elapsed: %fms\n", t * 1000 / getTickFrequency());
 
@@ -424,8 +426,8 @@ int main(int argc, char **argv)
                 disp.convertTo(disp8, CV_8U);
             
             sprintf( filename, "./disp%d.jpg", loop_count );
-            cv::imwrite(filename, disp8);
-            cv::minMaxLoc(disp8, &min, &max, NULL, NULL);
+            imwrite(filename, disp8);
+            minMaxLoc(disp8, &min, &max, NULL, NULL);
             
             // for mock up only
             if (loop_count == 1)
@@ -451,7 +453,7 @@ int main(int argc, char **argv)
             GPb = WRr * GPb;
             // GPb.ptr<double>(0)[0] = GPb.ptr<double>(0)[0] + 3000; // shift 3000 only for displaying purpose
 
-            obstacle_map.setTo(cv::Scalar(0,0,0));
+            obstacle_map.setTo(Scalar(0,0,0));
             for (i = 0; i < obj_count; i++)
             {
                 ellipse_list[i].u1 = ellipse_list[i].u1 - image_size.width/2; // set position of the drone at the center of the image
@@ -487,7 +489,7 @@ int main(int argc, char **argv)
                 line(obstacle_map, Point(cvRound(-poses[current_waypoint_index+i].pose.position.y*100+3000), cvRound(2000 - poses[current_waypoint_index+i].pose.position.x*100)), Point(cvRound(-poses[current_waypoint_index+i+1].pose.position.y*100 + 3000), cvRound(2000 - poses[current_waypoint_index+i+1].pose.position.x*100)), Scalar(0,0,255), 2);
             }
             sprintf( filename, "./obstacle_map%d.jpg", loop_count );
-            cv::imwrite(filename, obstacle_map);
+            imwrite(filename, obstacle_map);
 
             last_calculation = ros::Time::now();
             loop_count++;
