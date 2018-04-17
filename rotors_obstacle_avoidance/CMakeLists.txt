@@ -72,3 +72,7 @@ add_executable(offb_circle src/offb_circle.cpp)
 add_dependencies(offb_circle ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(offb_circle ${catkin_LIBRARIES})
 
+add_executable(offb_mode_test src/offb_mode_test.cpp)
+add_dependencies(offb_mode_test ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(offb_mode_test ${catkin_LIBRARIES})
+
