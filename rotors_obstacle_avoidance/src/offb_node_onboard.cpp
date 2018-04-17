@@ -9,8 +9,15 @@
 #include <mavros_msgs/CommandBool.h>
 #include <mavros_msgs/SetMode.h>
 #include <mavros_msgs/State.h>
+#include <linux/videodev2.h>
 #include <vector>
 #include <cmath>
+#include <malloc.h>
+#include <thread> 
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/core/core.hpp>
@@ -27,46 +34,12 @@
 #include "umap_util.hpp"
 #include "wp_planning.hpp"
 
+#include "get_image.hpp"
+#include "camera.h"
+
 using namespace std;
 using namespace umap_utility;
 using namespace wp;
-
-cv::Mat left_image;
-bool has_left_image = false;
-void image_cb_left(const sensor_msgs::ImageConstPtr& msg)
-{
-    cv_bridge::CvImagePtr cv_ptr;
-    try
-    {
-        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
-    }
-    catch (cv_bridge:: Exception& e)
-    {
-        ROS_ERROR("Count not convert from '%s' to 'bgr8'. ", msg->encoding.c_str());
-    }
-    // ROS_INFO("READING IMAGE");
-    left_image = cv_ptr->image;
-    has_left_image = true;
-}
-
-cv::Mat right_image;
-bool has_right_image = false;
-void image_cb_right(const sensor_msgs::ImageConstPtr& msg)
-{
-    cv_bridge::CvImagePtr cv_ptr;
-    try
-    {
-        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
-    }
-    catch (cv_bridge:: Exception& e)
-    {
-        ROS_ERROR("Count not convert from '%s' to 'bgr8'. ", msg->encoding.c_str());
-    }
-    // ROS_INFO("READING IMAGE");
-    right_image = cv_ptr->image;
-    has_right_image = true;
-}
-
 
 mavros_msgs::State current_state;
 void state_cb(const mavros_msgs::State::ConstPtr &msg)
@@ -88,7 +61,6 @@ bool checkEqualPose(const geometry_msgs::PoseStamped expectedPosition)
         std::abs(expectedPosition.pose.position.z - current_pose.pose.position.z) < 0.1
     );
 }
-
 
 int main(int argc, char **argv)
 {
@@ -112,7 +84,7 @@ int main(int argc, char **argv)
     int i,j,k,current_x, current_y;
     int loop_count;
     int SADWindowSize, numberOfDisparities, sgbmWinSize, cn;
-    cv::Size image_size;
+    cv::Size image_size(2432, 1842);
     
     double f,b;
 
@@ -129,15 +101,125 @@ int main(int argc, char **argv)
     vector< pair<double, double> > waypoints(200);
     vector< pair<double, double> > waypoints_pub(200);
     
+    int framesize = image_size.width*image_size.height;
+
+    cv::Mat left_image(1842, 2432, CV_16UC1);
+    cv::Mat right_image(1842, 2432, CV_16UC1);
+    cv::Mat left_image_debayer(921, 1216, CV_8UC1);
+    cv::Mat right_image_debayer(921, 1216, CV_8UC1);
     cv::Mat disp(600,800, CV_8UC3);
     cv::Mat disp8(600,800, CV_8UC3);
     cv::Mat obstacle_map(2000,6000, CV_8UC3);
+
+    cv::Mat R, T, R1, R2, P1, P2, Q;
+    cv::Mat cropped_left, cropped_right;
+    cv::Mat camera_matrix[2], dist_coeffs[2];
+    cv::Mat rimg[2], cimg;
+    cv::Mat rmap[2][2];
+    cv::Rect validRoi[2];
+    int VROIX, VROIY, VROIW, VROIH;
+    int sf, w, h;
+
+    // Copy the data into an OpenCV Mat structure
+    uint8_t *ptr_i, *ptr_i1, *dbptr;
+    uint8_t *rptr_i, *rptr_i1, *rdbptr;
+    int red,green,blue;
+    int ib, jb;
+
+    FileStorage fs("./extrinsics.yml", FileStorage::READ);
+    
 
     double GYb;
     double *pe1, *pe2, *se1, *se2;
 
     int alg = STEREO_SGBM;
     Ptr<StereoSGBM> sgbm = cv::StereoSGBM::create(0, 16, 3);
+
+    char *dev_name = "/dev/video0";
+	char *dev_name2 = "/dev/video1";
+	char left_name[50];
+	char right_name[50];
+
+    if (fs.isOpened())
+    {
+        fs["R"] >> R;
+        fs["T"] >> T;
+        fs["R1"] >> R1;
+        fs["R2"] >> R2;
+        fs["P1"] >> P1;
+        fs["P2"] >> P2;
+        fs["Q"] >> Q;
+        fs["VROIX"] >> VROIX;
+        fs["VROIY"] >> VROIY;
+        fs["VROIW"] >> VROIW;
+        fs["VROIH"] >> VROIH;
+
+        // cout << R << T << R1 << R2 << P1 << P2 << Q << endl;
+        fs.release();
+    }
+    else
+        cout << "Error: can not read the extrinsic parameters\n";
+
+    // Setup Intrinsics Camera Matrix
+    fs.open("./intrinsics.yml", FileStorage::READ);
+    if (fs.isOpened())
+    {
+        fs["M1"] >> camera_matrix[0];
+        fs["M2"] >> camera_matrix[1];
+        fs["D1"] >> dist_coeffs[0];
+        fs["D2"] >> dist_coeffs[1];
+        fs.release();
+    }
+	
+    std::thread spi_thread(getimage::flushBuffer); // signal every 250 ms
+	cameraState *c1 = init_camera(dev_name, 2432, 1842, 1, 3, 2);
+	cameraState *c2 = init_camera(dev_name2, 2432, 1842, 1, 3, 2);
+
+	int control_val, control_val2;
+	v4l2SetControl(c1, V4L2_CID_EXPOSURE, 10);
+	control_val = v4l2GetControl(c1, V4L2_CID_EXPOSURE);
+	fprintf(stderr, "set value:%d\n", control_val);
+
+	v4l2SetControl(c1, V4L2_CID_GAIN, 1);
+	control_val = v4l2GetControl(c1, V4L2_CID_GAIN);
+	fprintf(stderr, "set value:%d\n", control_val);
+
+	v4l2SetControl(c2, V4L2_CID_EXPOSURE, 10);
+	control_val2 = v4l2GetControl(c2, V4L2_CID_EXPOSURE);
+	fprintf(stderr, "set value:%d\n", control_val2);
+
+	v4l2SetControl(c2, V4L2_CID_GAIN, 1);
+	control_val2 = v4l2GetControl(c1, V4L2_CID_GAIN);
+	fprintf(stderr, "set value:%d\n", control_val2);
+
+	// Set Contrast to 1
+	v4l2SetControl(c1, V4L2_CID_CONTRAST, 1);
+	control_val = v4l2GetControl(c1, V4L2_CID_CONTRAST);
+	fprintf(stderr, "set value:%d\n", control_val);
+
+	v4l2SetControl(c2, V4L2_CID_CONTRAST, 1);
+	control_val2 = v4l2GetControl(c2, V4L2_CID_CONTRAST);
+	fprintf(stderr, "set value:%d\n", control_val2);
+
+	void *hostBuffer = malloc(c1->width * c1->height * c1->bytePerPixel * 5);
+	void *hostBuffer2 = malloc(c2->width * c2->height * c2->bytePerPixel * 5);
+
+	struct v4l2_buffer buff1;
+	struct v4l2_buffer buff2;
+
+	for (i = 0; i < 3; i++)
+	{
+		// remove image from buff first
+		fprintf(stdout, "Flushing camera buffer\n");
+		if(getBufferTimeOut(c1, &buff1, 1) == 1)
+		{
+			pushBuffer(c1, &buff1);
+		}
+		if(getBufferTimeOut(c2, &buff2, 1) == 1)
+		{
+			pushBuffer(c2, &buff2);
+		}
+	}
 
     ros::Subscriber state_sub = nh.subscribe<mavros_msgs::State>("mavros/state", 10, state_cb);
     ros::Publisher local_pos_pub = nh.advertise<geometry_msgs::PoseStamped>("mavros/setpoint_position/local", 10);
@@ -244,8 +326,73 @@ int main(int argc, char **argv)
         if(ready && ros::Time::now() - last_calculation > ros::Duration(0.5))
         {
             if(!enabled || !armed) continue;
-            if (!has_left_image || !has_right_image) continue;
+
+            // get image and debayer
+            getBuffer(c1, &buff1);
+            getBuffer(c2, &buff2);
+
+            memcpy(left_image.data, buff1.m.userptr, framesize*2);
+            memcpy(right_image.data, buff2.m.userptr, framesize*2);
+            
+            pushBuffer(c1, &buff1);
+            pushBuffer(c2, &buff2);
+            
+            // getting image
+            t = getTickCount();
+            left_image.convertTo(left_image, CV_8UC1, 1);
+            right_image.convertTo(right_image, CV_8UC1, 1);
+
+            for (i = 0 ; i < left_image.rows/2 ; i++)
+            {
+                ib = i*2;
+                ptr_i = left_image.ptr<uint8_t>(ib);
+                ptr_i1 = left_image.ptr<uint8_t>(ib+1);
+                dbptr = left_image_debayer.ptr<uint8_t>(i);
+
+                rptr_i = right_image.ptr<uint8_t>(ib);
+                rptr_i1 = right_image.ptr<uint8_t>(ib+1);
+                rdbptr = right_image_debayer.ptr<uint8_t>(i);
+
+                for ( j = 0 ; j < left_image.cols/2 ; j++)
+                {
+                    jb = j*2;
+                    green = int((ptr_i[jb] + ptr_i1[jb+1])/2);
+                    red = int(ptr_i[jb+1]);
+                    blue = int(ptr_i1[jb]);
+                    dbptr[j] = uint8_t(sqrt(0.299*red*red + 0.587*green*green + 0.114*blue*blue));
+
+                    green = int(rptr_i[jb] + rptr_i1[jb+1])/2;
+                    red = int(rptr_i[jb+1]);
+                    blue = int(rptr_i1[jb]);
+                    rdbptr[j] = uint8_t(sqrt(0.299*red*red + 0.587*green*green + 0.114*blue*blue));
+                }
+            }
+            t = getTickCount() - t;
+            printf("loop debayer time: %fms\n", t * 1000 / getTickFrequency());
+
+            // rectify
+            // set up other values
             image_size = left_image.size();
+            sf = 600. / MAX(image_size.width, image_size.height);
+            w = cvRound(image_size.width * sf);
+            h = cvRound(image_size.height * sf);
+
+            // undistort and rectify
+            t = getTickCount();
+            initUndistortRectifyMap(camera_matrix[0], dist_coeffs[0], R1, P1, image_size, CV_16SC2, rmap[0][0], rmap[0][1]);
+            initUndistortRectifyMap(camera_matrix[1], dist_coeffs[1], R2, P2, image_size, CV_16SC2, rmap[1][0], rmap[1][1]);
+
+            remap(left_image, rimg[0], rmap[0][0], rmap[0][1], INTER_LINEAR);
+            remap(right_image, rimg[1], rmap[1][0], rmap[1][1], INTER_LINEAR);
+
+            // use second region of interest because it is smaller for this specific camera calibration
+            Rect vroi(cvRound(VROIX * sf), cvRound(VROIY * sf),
+                    cvRound(VROIW * sf), cvRound(VROIH * sf));
+
+            resize(rimg[0], rimg[0], Size(w, h), 0, 0, INTER_AREA);
+            resize(rimg[1], rimg[1], Size(w, h), 0, 0, INTER_AREA);
+            cropped_left = rimg[0](vroi);
+            cropped_right = rimg[1](vroi);
 
             SADWindowSize = 3;
             numberOfDisparities = 0;
@@ -253,10 +400,10 @@ int main(int argc, char **argv)
             sgbm->setPreFilterCap(63);
             sgbmWinSize = SADWindowSize > 0 ? SADWindowSize : 3;
             sgbm->setBlockSize(sgbmWinSize);
-            cn = left_image.channels();
-            // cn = cropped_left.channels();
+            // cn = left_image.channels();
+            cn = cropped_left.channels();
 
-            // image_size = cropped_left.size();
+            image_size = cropped_left.size();
             numberOfDisparities = numberOfDisparities > 0 ? numberOfDisparities : ((image_size.width / 8) + 15) & -16;
             sgbm->setP1(8 * cn * sgbmWinSize * sgbmWinSize);
             sgbm->setP2(32 * cn * sgbmWinSize * sgbmWinSize);
