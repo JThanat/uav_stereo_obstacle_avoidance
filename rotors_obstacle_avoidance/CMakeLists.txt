@@ -53,7 +53,7 @@ include_directories(${catkin_INCLUDE_DIRS})
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 add_library(rotors_obstacle_avoidance
-    src/offb_node.cpp
+    src/offb_circle.cpp
 )
 
 add_dependencies(rotors_obstacle_avoidance ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
@@ -63,7 +63,8 @@ add_dependencies(rotors_obstacle_avoidance ${${PROJECT_NAME}_EXPORTED_TARGETS} $
 #   src/${PROJECT_NAME}/rotors_obstacle_avoidance.cpp
 # )
 # add_dependencies(offb_node ${catkin_EXPORTED_TARGETS})
-add_executable(offb_node src/offb_node.cpp src/umap_util.cpp src/wp_planning.cpp)
+
+#add_executable(offb_node src/offb_node.cpp src/umap_util.cpp src/wp_planning.cpp)
 
 #add_dependencies(offb_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 #target_link_libraries(offb_node ${catkin_LIBRARIES})
