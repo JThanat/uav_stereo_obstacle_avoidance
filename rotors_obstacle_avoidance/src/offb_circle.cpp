@@ -53,6 +53,9 @@ int main(int argc, char **argv)
         rate.sleep();
     }
 
+    mavros_msgs::CommandBool arm_cmd;
+    arm_cmd.request.value = true;
+
     ros::Time last_request = ros::Time::now();
 
     while(ros::ok()) {
