@@ -25,6 +25,7 @@ find_package(Qt5Test)
 find_package(Qt5Concurrent)
 find_package(Qt5OpenGL)
 find_package(OpenCV 3 REQUIRED)
+find_package(Threads)
 ###################################
 ## catkin specific configuration ##
 ###################################
@@ -75,4 +76,8 @@ target_link_libraries(offb_circle ${catkin_LIBRARIES})
 add_executable(offb_mode_test src/offb_mode_test.cpp)
 add_dependencies(offb_mode_test ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(offb_mode_test ${catkin_LIBRARIES})
+
+add_executable(offb_node_onboard src/offb_node_onboard.cpp src/umap_util.cpp src/wp_planning.cpp src/get_image.cpp)
+add_dependencies(offb_node_onboard ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(offb_node_onboard ${catkin_LIBRARIES})
 

@@ -338,10 +338,11 @@ int main(int argc, char **argv)
             pushBuffer(c2, &buff2);
             
             // getting image
+            imwrite('./left_image_16C.jpg', left_image);
             t = getTickCount();
             left_image.convertTo(left_image, CV_8UC1, 1);
             right_image.convertTo(right_image, CV_8UC1, 1);
-
+            imwrite('./left_image.jpg', left_image);
             for (i = 0 ; i < left_image.rows/2 ; i++)
             {
                 ib = i*2;
@@ -369,6 +370,7 @@ int main(int argc, char **argv)
             }
             t = getTickCount() - t;
             printf("loop debayer time: %fms\n", t * 1000 / getTickFrequency());
+            imwrite('./left_debayer.jpg', left_image_debayer);
 
             // rectify
             // set up other values
