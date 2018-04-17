@@ -35,8 +35,9 @@
 #include "wp_planning.hpp"
 
 #include "get_image.hpp"
+extern "C" {
 #include "camera.h"
-
+}
 using namespace std;
 using namespace umap_utility;
 using namespace wp;

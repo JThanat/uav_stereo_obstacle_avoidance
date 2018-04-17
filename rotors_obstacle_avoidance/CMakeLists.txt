@@ -82,4 +82,5 @@ target_link_libraries(offb_mode_test ${catkin_LIBRARIES})
 add_executable(offb_node_onboard src/offb_node_onboard.cpp src/umap_util.cpp src/wp_planning.cpp src/get_image.cpp src/camera.c)
 add_dependencies(offb_node_onboard ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(offb_node_onboard ${catkin_LIBRARIES})
+target_link_libraries(offb_node_onboard ${OpenCV_LIBRARIES})
 
