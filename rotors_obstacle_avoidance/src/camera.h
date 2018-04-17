@@ -1,3 +1,5 @@
+#ifndef C_H
+#define C_H
 struct buffer
 {
 	void *start;
@@ -28,3 +30,5 @@ int v4l2GetControl(cameraState *cam, int control);
 int v4l2ResetControl(cameraState *cam, int control);
 
 int checkBufferTimeOut(cameraState *cam, struct v4l2_buffer *buf, int timeout);
+
+#endif

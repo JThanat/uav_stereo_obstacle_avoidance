@@ -43,6 +43,8 @@ catkin_package(
 #   DEPENDS system_lib
 )
 
+set(CMAKE_CXX_FLAGS "-fpermissive -std=c++0x")
+
 ###########
 ## Build ##
 ###########
@@ -64,11 +66,11 @@ add_dependencies(rotors_obstacle_avoidance ${${PROJECT_NAME}_EXPORTED_TARGETS} $
 # )
 # add_dependencies(offb_node ${catkin_EXPORTED_TARGETS})
 
-#add_executable(offb_node src/offb_node.cpp src/umap_util.cpp src/wp_planning.cpp)
+add_executable(offb_node src/offb_node.cpp src/umap_util.cpp src/wp_planning.cpp)
 
-#add_dependencies(offb_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-#target_link_libraries(offb_node ${catkin_LIBRARIES})
-#target_link_libraries(offb_node ${OpenCV_LIBRARIES})
+add_dependencies(offb_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(offb_node ${catkin_LIBRARIES})
+target_link_libraries(offb_node ${OpenCV_LIBRARIES})
 
 add_executable(offb_circle src/offb_circle.cpp)
 add_dependencies(offb_circle ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
@@ -78,7 +80,8 @@ add_executable(offb_mode_test src/offb_mode_test.cpp)
 add_dependencies(offb_mode_test ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(offb_mode_test ${catkin_LIBRARIES})
 
-#add_executable(offb_node_onboard src/offb_node_onboard.cpp src/umap_util.cpp src/wp_planning.cpp src/get_image.cpp)
-#add_dependencies(offb_node_onboard ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-#target_link_libraries(offb_node_onboard ${catkin_LIBRARIES})
+add_executable(offb_node_onboard src/offb_node_onboard.cpp src/umap_util.cpp src/wp_planning.cpp src/get_image.cpp src/camera.c)
+add_dependencies(offb_node_onboard ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(offb_node_onboard ${catkin_LIBRARIES})
+target_link_libraries(offb_node_onboard ${OpenCV_LIBRARIES})
 
