@@ -16,8 +16,6 @@ double wn;
 mavros_msgs::State current_state;
 void state_cb(const mavros_msgs::State::ConstPtr& msg){
     current_state = *msg;
-	ROS_INFO("Call back");
-	//std::cout << *msg.c_str() <<  std::endl;
 }
 
 int main(int argc, char **argv)
@@ -56,25 +54,24 @@ int main(int argc, char **argv)
     ros::Time last_request = ros::Time::now();
 
     while(ros::ok()){
-	std::cout << current_state.mode << std::endl;
-        //if (current_state.mode != "GUIDED")
-        //{
-          //  ROS_INFO("Vehicle is not in GUIDED MODE, cannot override position");
-         //   continue;
-        //}
-        //else 
-        //{
-            //if (!current_state.armed)
-            //{
-              //  ROS_INFO("Vehicle not armed");
-            //}
-            //else
-           // {
-             //   ROS_INFO("Vehicle armed");
-         //   }
-       // }
+    if (current_state.mode != "GUIDED")
+    {
+        ROS_INFO("Vehicle is not in GUIDED MODE, cannot override position");
+        continue;
+    }
+    else 
+    {
+        if (!current_state.armed)
+        {
+            ROS_INFO("Vehicle not armed");
+        }
+        else
+        {
+            ROS_INFO("Vehicle armed");
+        }
+    }
 	ros::spinOnce();
-       rate.sleep();
+    rate.sleep();
     }
 
     return 0;
