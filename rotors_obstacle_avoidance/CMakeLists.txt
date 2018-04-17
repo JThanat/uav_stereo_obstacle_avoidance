@@ -43,6 +43,8 @@ catkin_package(
 #   DEPENDS system_lib
 )
 
+set(CMAKE_CXX_FLAGS "-fpermissive -std=c++0x")
+
 ###########
 ## Build ##
 ###########
