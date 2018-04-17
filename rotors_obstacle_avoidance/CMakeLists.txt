@@ -18,13 +18,13 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   sensor_msgs
 )
-find_package(Qt5Gui)
-find_package(Qt5Core)
-find_package(Qt5Widgets)
-find_package(Qt5Test)
-find_package(Qt5Concurrent)
-find_package(Qt5OpenGL)
-find_package(OpenCV 3 REQUIRED)
+#find_package(Qt5Gui)
+#find_package(Qt5Core)
+#find_package(Qt5Widgets)
+#find_package(Qt5Test)
+#find_package(Qt5Concurrent)
+#find_package(Qt5OpenGL)
+find_package(OpenCV REQUIRED)
 find_package(Threads)
 ###################################
 ## catkin specific configuration ##
