@@ -18,8 +18,24 @@ void state_cb(const mavros_msgs::State::ConstPtr& msg){
     current_state = *msg;
 }
 
+geometry_msgs::PoseStamped current_pose;
+void pose_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
+{
+    current_pose = *msg;
+}
+
+bool checkEqualPose(const geometry_msgs::PoseStamped expectedPosition)
+{
+    return (
+        std::abs(expectedPosition.pose.position.x - current_pose.pose.position.x) < 0.3 && 
+        std::abs(expectedPosition.pose.position.y - current_pose.pose.position.y) < 0.3 && 
+        std::abs(expectedPosition.pose.position.z - current_pose.pose.position.z) < 0.3
+    );
+}
+
 int main(int argc, char **argv)
 {
+    int i;
     ros::init(argc, argv, "offb_node");
     ros::NodeHandle nh;
 
@@ -29,42 +45,82 @@ int main(int argc, char **argv)
     ros::ServiceClient arming_client = nh.serviceClient<mavros_msgs::CommandBool>("mavros/cmd/arming");
     ros::ServiceClient set_mode_client = nh.serviceClient<mavros_msgs::SetMode>("mavros/set_mode");
 
+    ros::Subscriber pose_sub = nh.subscribe<geometry_msgs::PoseStamped>("/mavros/local_position/pose", 10, pose_cb);
     //the setpoint publishing rate MUST be faster than 2Hz
     ros::Rate rate(20.0);
     
 
-    nh.param("pub_setpoints_traj/wn", wn, 1.0);
-	nh.param("pub_setpoints_traj/r", r, 1.0);
     // wait for FCU connection
     while(ros::ok() && current_state.connected){
         ros::spinOnce();
         rate.sleep();
     }
 
-    geometry_msgs::PoseStamped pose;
-    pose.pose.position.x = 0;
-    pose.pose.position.y = 0;
-    pose.pose.position.z = 5;
+    std::vector<geometry_msgs::PoseStamped> poses(20);
+    poses[0].pose.position.x = 0;
+    poses[0].pose.position.y = 0;
+    poses[0].pose.position.z = 5;
+    
+    for (i = 0 ; i < 20 ; i++)
+    {
+        if(i <= 5)
+        {
+            poses[i].pose.position.x = i;
+            poses[i].pose.position.y = 0;
+            poses[i].pose.position.z = 5;
+        }
+        else if(i <= 10)
+        {
+            poses[i].pose.position.x = 5;
+            poses[i].pose.position.y = i - 5;
+            poses[i].pose.position.z = 5;
+        }
+        else if(i <= 15)
+        {
+            poses[i].pose.position.x = 15 - i;
+            poses[i].pose.position.y = 5;
+            poses[i].pose.position.z = 5;
+        }
+        else 
+        {
+            poses[i].pose.position.x = 0;
+            poses[i].pose.position.y = 20 - i;
+            poses[i].pose.position.z = 5;
+        }
+    }
 
     //send a few setpoints before starting
     for(int i = 100; ros::ok() && i > 0; --i){
-        local_pos_pub.publish(pose);
+        local_pos_pub.publish(poses[0]);
         ros::spinOnce();
         rate.sleep();
     }
+    mavros_msgs::SetMode offb_set_mode;
+    offb_set_mode.request.custom_mode = "GUIDED";
 
     mavros_msgs::CommandBool arm_cmd;
     arm_cmd.request.value = true;
 
     ros::Time last_request = ros::Time::now();
 
+    i = 0;
     while(ros::ok()) {
-
         if (current_state.mode != "GUIDED")
         {
+            
             ROS_INFO("Vehicle is not in GUIDED Mode");
             continue;
         }
+        // if (current_state.mode != "OFFBOARD" &&
+        //     (ros::Time::now() - last_request > ros::Duration(5.0)))
+        // {
+        //     if (set_mode_client.call(offb_set_mode) &&
+        //         offb_set_mode.response.mode_sent)
+        //     {
+        //         ROS_INFO("Offboard enabled");
+        //     }
+        //     last_request = ros::Time::now();
+        // }
         else
         {
             if (!current_state.armed &&
@@ -79,12 +135,12 @@ int main(int argc, char **argv)
             }
 
         }
+        if(checkEqualPose(poses[i%20]))
+        {
+            i++;
+        }
 
-        pose.pose.position.x = r*sin(theta);
-        pose.pose.position.y = r*cos(theta);
-        pose.pose.position.z = 5;
-
-        local_pos_pub.publish(pose);
+        local_pos_pub.publish(poses[i%20]);
         ros::spinOnce();
         rate.sleep();
     }
