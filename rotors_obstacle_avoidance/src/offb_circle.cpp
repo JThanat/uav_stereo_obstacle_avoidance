@@ -107,6 +107,7 @@ int main(int argc, char **argv)
 
     i = 0;
     while(ros::ok()) {
+        ROS_INFO("Current Mode %s\n", current_state.mode.data.c_str());
         if (current_state.mode != "GUIDED")
         {
             
@@ -127,6 +128,7 @@ int main(int argc, char **argv)
         // }
         else
         {
+            // std::cout << "Vehicle In Guieded Mode" << std::endl;
             if (!current_state.armed &&
                 (ros::Time::now() - last_request > ros::Duration(5.0)))
             {
@@ -143,9 +145,9 @@ int main(int argc, char **argv)
         {
             i++;
         }
-
-        std::cout << "Index " << "i" << std::endl;
-        std::cout << "Current Pose: " << current_pose.pose.position.x << " " << current_pose.pose.position.y << " " << current_pose.pose.position.z << std::endl;
+        ROS_INFO("Index: %D Current Pose %.f %.f %.f\n", i,current_pose.pose.position.x, current_pose.pose.position.y, current_pose.pose.position.z );
+        // std::cout << "Index " << "i" << std::endl;
+        // std::cout << "Current Pose: " << current_pose.pose.position.x << " " << current_pose.pose.position.y << " " << current_pose.pose.position.z << std::endl;
 
         local_pos_pub.publish(poses[i%20]);
         ros::spinOnce();
