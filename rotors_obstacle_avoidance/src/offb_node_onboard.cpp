@@ -241,7 +241,7 @@ int main(int argc, char **argv)
         ros::spinOnce();
         ROS_INFO("SPIN!");
         rate.sleep();
-        ROS_INFO("Wake up");i
+        ROS_INFO("Wake up");
     }
     ROS_INFO("set pose array");
 
