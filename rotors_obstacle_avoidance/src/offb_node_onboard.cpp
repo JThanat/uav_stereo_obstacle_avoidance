@@ -283,6 +283,7 @@ int main(int argc, char **argv)
         {   
             ROS_INFO("Not in GUIDED MODE");
             enabled = false;
+            ros::spinOnce();
             rate.sleep();
             continue;
         }
@@ -358,6 +359,7 @@ int main(int argc, char **argv)
             // rectify
             // set up other values
             image_size = left_image_debayer.size();
+            cout << image_size().height << " " << image_size().width << endl;
             sf = 600. / MAX(image_size.width, image_size.height);
             w = cvRound(image_size.width * sf);
             h = cvRound(image_size.height * sf);
