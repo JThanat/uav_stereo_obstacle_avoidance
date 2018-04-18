@@ -259,7 +259,7 @@ int main(int argc, char **argv)
     }
 
     mavros_msgs::SetMode offb_set_mode;
-    offb_set_mode.request.custom_mode = "GUIDED";
+    offb_set_mode.request.custom_mode = "OFFBOARD";
 
     mavros_msgs::CommandBool arm_cmd;
     arm_cmd.request.value = true;
@@ -278,7 +278,6 @@ int main(int argc, char **argv)
     {
         if (current_state.mode != "GUIDED")
         {   
-            ROS_INFO("Not in GUIDED MODE");
             enabled = false;
             rate.sleep();
             continue;
@@ -286,13 +285,25 @@ int main(int argc, char **argv)
         else
         {
             enabled = true;
+            if (current_state.armed) armed = true;
+            else if (!current_state.armed &&
+                (ros::Time::now() - last_request > ros::Duration(5.0)))
+            {
+                if (arming_client.call(arm_cmd) &&
+                    arm_cmd.response.success)
+                {
+                    ROS_INFO("Vehicle armed");
+                    armed = true;
+                }
+                last_request = ros::Time::now();
+            }
         }
 
-        if (!enabled) {
+        if (!enabled || !armed) {
             local_pos_pub.publish(poses[0]);
             ros::spinOnce();
         }
-        ready = true; // TODO REMOVE THIS!
+
         if (!ready && checkEqualPose(poses[0]))
         {
             ready = true;
@@ -302,10 +313,10 @@ int main(int argc, char **argv)
         {
             current_waypoint_index++;
         }
-        
+
         if(ready && ros::Time::now() - last_calculation > ros::Duration(0.5))
         {
-            if(!enabled) continue;
+            if(!enabled || !armed) continue;
 
             // get image and debayer
             getBuffer(c1, &buff1);
