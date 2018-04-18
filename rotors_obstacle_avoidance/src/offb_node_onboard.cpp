@@ -359,7 +359,7 @@ int main(int argc, char **argv)
             // rectify
             // set up other values
             image_size = left_image_debayer.size();
-            cout << image_size().height << " " << image_size().width << endl;
+            cout << image_size.height << " " << image_size.width << endl;
             sf = 600. / MAX(image_size.width, image_size.height);
             w = cvRound(image_size.width * sf);
             h = cvRound(image_size.height * sf);
