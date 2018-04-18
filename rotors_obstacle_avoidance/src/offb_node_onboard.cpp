@@ -95,7 +95,7 @@ int main(int argc, char **argv)
     bool ready = false;
 
     int obj_count;
-    int wp_gen = 200;
+    int wp_gen = 100;
     vector<ellipse_desc> ellipse_list(20);
     vector< pair<double, double> > waypoints(200);
     vector< pair<double, double> > waypoints_pub(200);
@@ -379,13 +379,13 @@ int main(int argc, char **argv)
             // imwrite("/home/ubuntu/img_log/rim0.jpg", rimg[0]);
             // imwrite("/home/ubuntu/img_log/rimg1.jpg", rimg[1]);
             // cout << rimg[0].rows << " " << rimg[0].cols << endl;
-            // resize(rimg[0], rimg[0], Size(w, h), 0, 0, INTER_AREA);
-            // resize(rimg[1], rimg[1], Size(w, h), 0, 0, INTER_AREA);
+            resize(rimg[0], rimg[0], Size(w, h), 0, 0, INTER_AREA);
+            resize(rimg[1], rimg[1], Size(w, h), 0, 0, INTER_AREA);
 
             // cout << "Finish resizing image" << endl;
             cropped_left = rimg[0](vroi);
             cropped_right = rimg[1](vroi);
-            
+
             SADWindowSize = 3;
             numberOfDisparities = 0;
 

@@ -109,6 +109,8 @@ int main(int argc, char **argv)
         {
             
             ROS_INFO("Vehicle is not in GUIDED Mode");
+            ros::spinOnce();
+            rate.sleep();
             continue;
         }
         // if (current_state.mode != "OFFBOARD" &&
