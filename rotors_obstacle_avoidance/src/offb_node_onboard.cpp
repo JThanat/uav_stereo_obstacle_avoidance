@@ -125,7 +125,7 @@ int main(int argc, char **argv)
     int red,green,blue;
     int ib, jb;
 
-    FileStorage fs("/Users/jthanat/.ros/extrinsics.yml", CV_STORAGE_READ);
+    FileStorage fs("/Users/jthanat/.ros/intrinsics.yml", CV_STORAGE_READ);
     
 
     double GYb;
@@ -140,6 +140,19 @@ int main(int argc, char **argv)
 	char left_name[50];
 	char right_name[50];
 
+    // Setup Intrinsics Camera Matrix
+    if (fs.isOpened())
+    {
+        fs["M1"] >> camera_matrix[0];
+        fs["M2"] >> camera_matrix[1];
+        fs["D1"] >> dist_coeffs[0];
+        fs["D2"] >> dist_coeffs[1];
+        fs.release();
+    }
+    else
+        cout << "Error: can not read the intrinsic parameters\n";
+
+    fs.open("/Users/jthanat/.ros/extrinsics.yml", CV_STORAGE_READ);
     if (fs.isOpened())
     {
         fs["R"] >> R;
@@ -160,18 +173,6 @@ int main(int argc, char **argv)
     else
         cout << "Error: can not read the extrinsic parameters\n";
 
-    // Setup Intrinsics Camera Matrix
-    fs.open("/Users/jthanat/.ros/intrinsics.yml", CV_STORAGE_READ);
-    if (fs.isOpened())
-    {
-        fs["M1"] >> camera_matrix[0];
-        fs["M2"] >> camera_matrix[1];
-        fs["D1"] >> dist_coeffs[0];
-        fs["D2"] >> dist_coeffs[1];
-        fs.release();
-    }
-    else
-        cout << "Error: can not read the intrinsic parameters\n";
 	
     std::thread spi_thread(getimage::flushBuffer); // signal every 250 ms
 	cameraState *c1 = init_camera(dev_name, 2432, 1842, 1, 3, 2);
@@ -324,7 +325,7 @@ int main(int argc, char **argv)
             t = getTickCount();
             left_image.convertTo(left_image, CV_8UC1, 1);
             right_image.convertTo(right_image, CV_8UC1, 1);
-            imwrite("/home/ubuntu/img_log/left_image.jpg", left_image);
+            // imwrite("/home/ubuntu/img_log/left_image.jpg", left_image);
             for (i = 0 ; i < left_image.rows/2 ; i++)
             {
                 ib = i*2;
