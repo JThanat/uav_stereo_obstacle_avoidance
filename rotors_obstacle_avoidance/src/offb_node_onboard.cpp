@@ -125,7 +125,7 @@ int main(int argc, char **argv)
     int red,green,blue;
     int ib, jb;
 
-    FileStorage fs("./extrinsics.yml", CV_STORAGE_READ);
+    FileStorage fs("/Users/jthanat/.ros/extrinsics.yml", CV_STORAGE_READ);
     
 
     double GYb;
@@ -161,7 +161,7 @@ int main(int argc, char **argv)
         cout << "Error: can not read the extrinsic parameters\n";
 
     // Setup Intrinsics Camera Matrix
-    fs.open("./intrinsics.yml", CV_STORAGE_READ);
+    fs.open("/Users/jthanat/.ros/intrinsics.yml", CV_STORAGE_READ);
     if (fs.isOpened())
     {
         fs["M1"] >> camera_matrix[0];
@@ -170,6 +170,8 @@ int main(int argc, char **argv)
         fs["D2"] >> dist_coeffs[1];
         fs.release();
     }
+    else
+        cout << "Error: can not read the intrinsic parameters\n";
 	
     std::thread spi_thread(getimage::flushBuffer); // signal every 250 ms
 	cameraState *c1 = init_camera(dev_name, 2432, 1842, 1, 3, 2);
@@ -238,7 +240,7 @@ int main(int argc, char **argv)
         ros::spinOnce();
         ROS_INFO("SPIN!");
         rate.sleep();
-        ROS_INFO("Wake up");
+        ROS_INFO("Wake up");i
     }
     ROS_INFO("set pose array");
 

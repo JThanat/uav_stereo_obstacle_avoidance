@@ -88,16 +88,16 @@ int main(void)
 
     alg = STEREO_SGBM;
     Ptr<StereoSGBM> sgbm = StereoSGBM::create(0, 16, 3);
-
-    FileStorage fs("./extrinsics.yml", FileStorage::READ);
-
+    
+    FileStorage fs("/Users/jthanat/.ros/extrinsics.yml", FileStorage::READ);
+    
     // img path
     char *imagedata = NULL;
     int framesize = 2432*1842;
     imagedata = (char*) malloc (sizeof(char) * framesize * 2);
-
-    img_left_path = "../data/raw_image/left1.raw";
-    img_right_path = "../data/raw_image/right1.raw";
+    
+    img_left_path = "/Users/jthanat/tmp/image/left1.raw";
+    img_right_path = "/Users/jthanat/tmp/image/right1.raw";
     FILE *fp = NULL;
     
     fp = fopen(img_left_path.c_str(), "rb");
@@ -166,8 +166,8 @@ int main(void)
     t = getTickCount() - t;
     printf("loop time: %fms\n", t * 1000 / getTickFrequency());
 
-    // imwrite("./left_img_debayer.jpg", left_img_debayer);
-    // imwrite("./right_img_debayer.jpg", right_img_debayer);
+    imwrite("./left_img_debayer.jpg", left_img_debayer);
+    imwrite("./right_img_debayer.jpg", right_img_debayer);
     // waitKey(0);
 
     // // Decode the Bayer data to RGB but keep using 16 bits per channel
@@ -206,7 +206,7 @@ int main(void)
         cout << "Error: can not read the extrinsic parameters\n";
 
     // Setup Intrinsics Camera Matrix
-    fs.open("./intrinsics.yml", FileStorage::READ);
+    fs.open("/Users/jthanat/.ros/extrinsics.yml", FileStorage::READ);
     if (fs.isOpened())
     {
         fs["M1"] >> camera_matrix[0];
