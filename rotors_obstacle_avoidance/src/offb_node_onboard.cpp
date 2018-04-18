@@ -125,7 +125,7 @@ int main(int argc, char **argv)
     int red,green,blue;
     int ib, jb;
 
-    FileStorage fs("/Users/jthanat/.ros/intrinsics.yml", CV_STORAGE_READ);
+    FileStorage fs("/home/ubuntu/.ros/intrinsics.yml", CV_STORAGE_READ);
     
 
     double GYb;
@@ -152,7 +152,7 @@ int main(int argc, char **argv)
     else
         cout << "Error: can not read the intrinsic parameters\n";
 
-    fs.open("/Users/jthanat/.ros/extrinsics.yml", CV_STORAGE_READ);
+    fs.open("/home/ubuntu/.ros/extrinsics.yml", CV_STORAGE_READ);
     if (fs.isOpened())
     {
         fs["R"] >> R;
@@ -321,7 +321,7 @@ int main(int argc, char **argv)
             pushBuffer(c2, &buff2);
             
             // getting image
-            imwrite("/home/ubuntu/img_log/left_image_16C.jpg", left_image);
+            // imwrite("/home/ubuntu/img_log/left_image_16C.jpg", left_image);
             t = getTickCount();
             left_image.convertTo(left_image, CV_8UC1, 1);
             right_image.convertTo(right_image, CV_8UC1, 1);
@@ -353,7 +353,7 @@ int main(int argc, char **argv)
             }
             t = getTickCount() - t;
             printf("loop debayer time: %fms\n", t * 1000 / getTickFrequency());
-            imwrite("/home/ubuntu/img_log/left_debayer.jpg", left_image_debayer);
+            // imwrite("/home/ubuntu/img_log/left_debayer.jpg", left_image_debayer);
 
             // rectify
             // set up other values
