@@ -373,16 +373,16 @@ int main(int argc, char **argv)
             remap(right_image_debayer, rimg[1], rmap[1][0], rmap[1][1], INTER_LINEAR);
             cout << "Finish Remapping" << endl;
             // use second region of interest because it is smaller for this specific camera calibration
-            Rect vroi(cvRound(VROIX * sf), cvRound(VROIY * sf),
-                    cvRound(VROIW * sf), cvRound(VROIH * sf));
+            Rect vroi(cvRound(VROIX), cvRound(VROIY),
+                    cvRound(VROIW), cvRound(VROIH));
 
-            imwrite("/home/ubuntu/img_log/rim0.jpg", rimg[0]);
-            imwrite("/home/ubuntu/img_log/rimg1.jpg", rimg[1]);
-            cout << rimg[0].rows << " " << rimg[0].cols << endl;
-            resize(rimg[0], rimg[0], Size(w, h), 0, 0, INTER_AREA);
-            resize(rimg[1], rimg[1], Size(w, h), 0, 0, INTER_AREA);
+            // imwrite("/home/ubuntu/img_log/rim0.jpg", rimg[0]);
+            // imwrite("/home/ubuntu/img_log/rimg1.jpg", rimg[1]);
+            // cout << rimg[0].rows << " " << rimg[0].cols << endl;
+            // resize(rimg[0], rimg[0], Size(w, h), 0, 0, INTER_AREA);
+            // resize(rimg[1], rimg[1], Size(w, h), 0, 0, INTER_AREA);
 
-            cout << "Finish resizing image" << endl;
+            // cout << "Finish resizing image" << endl;
             cropped_left = rimg[0](vroi);
             cropped_right = rimg[1](vroi);
             
