@@ -366,10 +366,10 @@ int main(int argc, char **argv)
             t = getTickCount();
             initUndistortRectifyMap(camera_matrix[0], dist_coeffs[0], R1, P1, image_size, CV_16SC2, rmap[0][0], rmap[0][1]);
             initUndistortRectifyMap(camera_matrix[1], dist_coeffs[1], R2, P2, image_size, CV_16SC2, rmap[1][0], rmap[1][1]);
-
+            cout << "Finish Initializing Undistort Map" << endl;
             remap(left_image_debayer, rimg[0], rmap[0][0], rmap[0][1], INTER_LINEAR);
             remap(right_image_debayer, rimg[1], rmap[1][0], rmap[1][1], INTER_LINEAR);
-
+            cout << "Finish Remapping" << endl;
             // use second region of interest because it is smaller for this specific camera calibration
             Rect vroi(cvRound(VROIX * sf), cvRound(VROIY * sf),
                     cvRound(VROIW * sf), cvRound(VROIH * sf));
