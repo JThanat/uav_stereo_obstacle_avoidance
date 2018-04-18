@@ -61,6 +61,8 @@ int main(int argc, char **argv)
     poses[0].pose.position.y = 0;
     poses[0].pose.position.z = 5;
     
+    // Y -> N
+    // X -> E
     for (i = 0 ; i < 20 ; i++)
     {
         if(i <= 5)
@@ -141,6 +143,9 @@ int main(int argc, char **argv)
         {
             i++;
         }
+
+        std::cout << "Index " << "i" << std::endl;
+        std::cout << "Current Pose: " << current_pose.pose.position.x << " " << current_pose.pose.position.y << " " << current_pose.pose.position.z << std::endl;
 
         local_pos_pub.publish(poses[i%20]);
         ros::spinOnce();
