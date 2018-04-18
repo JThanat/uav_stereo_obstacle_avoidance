@@ -357,7 +357,7 @@ int main(int argc, char **argv)
 
             // rectify
             // set up other values
-            image_size = left_image.size();
+            image_size = left_debayer.size();
             sf = 600. / MAX(image_size.width, image_size.height);
             w = cvRound(image_size.width * sf);
             h = cvRound(image_size.height * sf);
