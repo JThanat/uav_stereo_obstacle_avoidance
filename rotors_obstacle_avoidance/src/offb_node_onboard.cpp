@@ -270,7 +270,7 @@ int main(int argc, char **argv)
     ros::Time last_request = ros::Time::now();
     ros::Time last_calculation;
     
-    f = 30; // in pixel 1 millimeter = 3.779528 pixel
+    f = 30.236220472; // in pixel 1 millimeter = 3.779528 pixel
     b = 15;   // in cm
 
     loop_count = 0;
@@ -373,7 +373,7 @@ int main(int argc, char **argv)
             // use second region of interest because it is smaller for this specific camera calibration
             Rect vroi(cvRound(VROIX * sf), cvRound(VROIY * sf),
                     cvRound(VROIW * sf), cvRound(VROIH * sf));
-
+            cout << rimg[0].rows << " " << rimg[0].cols << endl;
             resize(rimg[0], rimg[0], Size(w, h), 0, 0, INTER_AREA);
             resize(rimg[1], rimg[1], Size(w, h), 0, 0, INTER_AREA);
             cropped_left = rimg[0](vroi);
