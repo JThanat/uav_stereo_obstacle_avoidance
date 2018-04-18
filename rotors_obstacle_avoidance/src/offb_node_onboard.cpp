@@ -357,7 +357,7 @@ int main(int argc, char **argv)
 
             // rectify
             // set up other values
-            image_size = left_debayer.size();
+            image_size = left_image_debayer.size();
             sf = 600. / MAX(image_size.width, image_size.height);
             w = cvRound(image_size.width * sf);
             h = cvRound(image_size.height * sf);
@@ -367,8 +367,8 @@ int main(int argc, char **argv)
             initUndistortRectifyMap(camera_matrix[0], dist_coeffs[0], R1, P1, image_size, CV_16SC2, rmap[0][0], rmap[0][1]);
             initUndistortRectifyMap(camera_matrix[1], dist_coeffs[1], R2, P2, image_size, CV_16SC2, rmap[1][0], rmap[1][1]);
 
-            remap(left_image, rimg[0], rmap[0][0], rmap[0][1], INTER_LINEAR);
-            remap(right_image, rimg[1], rmap[1][0], rmap[1][1], INTER_LINEAR);
+            remap(left_image_debayer, rimg[0], rmap[0][0], rmap[0][1], INTER_LINEAR);
+            remap(right_image_debayer, rimg[1], rmap[1][0], rmap[1][1], INTER_LINEAR);
 
             // use second region of interest because it is smaller for this specific camera calibration
             Rect vroi(cvRound(VROIX * sf), cvRound(VROIY * sf),
@@ -402,7 +402,7 @@ int main(int argc, char **argv)
             // sgbm.setMode(StereoSGBM::MODE_SGBM);
 
             t = getTickCount();
-            sgbm(left_image, right_image, disp);
+            sgbm(cropped_left, cropped_right, disp);
             t = getTickCount() - t;
             printf("Disparity Time elapsed: %fms\n", t * 1000 / getTickFrequency());
 
