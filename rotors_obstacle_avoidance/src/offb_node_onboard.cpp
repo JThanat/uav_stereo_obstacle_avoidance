@@ -274,7 +274,7 @@ int main(int argc, char **argv)
     ros::Time last_request = ros::Time::now();
     ros::Time last_calculation;
     
-    f = 30.236220472; // in pixel 1 millimeter = 3.779528 pixel
+    f = 1065; // in pixel 1 millimeter = 3.779528 pixel
     b = 15;   // in cm
 
     loop_count = 0;
