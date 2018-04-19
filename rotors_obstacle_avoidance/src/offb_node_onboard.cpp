@@ -367,7 +367,7 @@ int main(int argc, char **argv)
             w = cvRound(image_size.width * sf);
             h = cvRound(image_size.height * sf);
             cout << w << " " << h " " << endl;
-            cout << Size(w,h).area << endl;
+            cout << Size(w,h).area() << endl;
 
             // undistort and rectify
             t = getTickCount();
