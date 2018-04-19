@@ -363,8 +363,8 @@ int main(int argc, char **argv)
             image_size = left_image_debayer.size();
             cout << image_size.height << " " << image_size.width << endl;
             sf = 600. / MAX(image_size.width, image_size.height);
-            w = cvRound(image_size.width);
-            h = cvRound(image_size.height);
+            w = cvRound(image_size.width * sf);
+            h = cvRound(image_size.height * sf);
 
             // undistort and rectify
             t = getTickCount();
@@ -375,8 +375,8 @@ int main(int argc, char **argv)
             remap(right_image_debayer, rimg[1], rmap[1][0], rmap[1][1], INTER_LINEAR);
             cout << "Finish Remapping" << endl;
             // use second region of interest because it is smaller for this specific camera calibration
-            Rect vroi(cvRound(VROIX), cvRound(VROIY),
-                    cvRound(VROIW), cvRound(VROIH));
+            Rect vroi(cvRound(VROIX*sf), cvRound(VROIY*sf),
+                    cvRound(VROIW*sf), cvRound(VROIH*sf));
 
             // imwrite("/home/ubuntu/img_log/rim0.jpg", rimg[0]);
             // imwrite("/home/ubuntu/img_log/rimg1.jpg", rimg[1]);
