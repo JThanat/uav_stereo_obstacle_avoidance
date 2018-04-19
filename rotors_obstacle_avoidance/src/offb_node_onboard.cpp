@@ -403,8 +403,11 @@ int main(int argc, char **argv)
             cropped_left = rimg0(vroi);
             cropped_right = rimg1(vroi);
 
-            // imwrite("/home/ubuntu/img_log/cropped_left.jpg", rimg0);
-            // imwrite("/home/ubuntu/img_log/cropped_right.jpg", rimg1);
+            sprintf( filename, "/home/ubuntu/img_log/cropped_left%d.jpg", loop_count );
+            imwrite(filename, cropped_left);
+
+            sprintf( filename, "/home/ubuntu/img_log/cropped_right%d.jpg", loop_count );
+            imwrite(filename, cropped_right);
 
             SADWindowSize = 3;
             numberOfDisparities = 0;

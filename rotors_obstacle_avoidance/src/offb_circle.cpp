@@ -27,9 +27,9 @@ void pose_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
 bool checkEqualPose(const geometry_msgs::PoseStamped expectedPosition)
 {
     return (
-        std::abs(expectedPosition.pose.position.x - current_pose.pose.position.x) < 0.3 && 
-        std::abs(expectedPosition.pose.position.y - current_pose.pose.position.y) < 0.3 && 
-        std::abs(expectedPosition.pose.position.z - current_pose.pose.position.z) < 0.3
+        std::abs(expectedPosition.pose.position.x - current_pose.pose.position.x) < 0.5 && 
+        std::abs(expectedPosition.pose.position.y - current_pose.pose.position.y) < 0.5 && 
+        std::abs(expectedPosition.pose.position.z - current_pose.pose.position.z) < 0.5
     );
 }
 
@@ -67,26 +67,26 @@ int main(int argc, char **argv)
     {
         if(i <= 5)
         {
-            poses[i].pose.position.x = i;
-            poses[i].pose.position.y = 0;
+            poses[i].pose.position.x = 0;
+            poses[i].pose.position.y = i;
             poses[i].pose.position.z = 5;
         }
         else if(i <= 10)
         {
-            poses[i].pose.position.x = 5;
-            poses[i].pose.position.y = i - 5;
+            poses[i].pose.position.x = i - 5;
+            poses[i].pose.position.y = 5;
             poses[i].pose.position.z = 5;
         }
         else if(i <= 15)
         {
-            poses[i].pose.position.x = 15 - i;
-            poses[i].pose.position.y = 5;
+            poses[i].pose.position.x = 5;
+            poses[i].pose.position.y = 15 - i;
             poses[i].pose.position.z = 5;
         }
         else 
         {
-            poses[i].pose.position.x = 0;
-            poses[i].pose.position.y = 20 - i;
+            poses[i].pose.position.x = 20 - i;
+            poses[i].pose.position.y = 0;
             poses[i].pose.position.z = 5;
         }
     }
