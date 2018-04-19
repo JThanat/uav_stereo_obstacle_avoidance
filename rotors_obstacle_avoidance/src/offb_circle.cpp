@@ -30,7 +30,7 @@ bool checkEqualPose(const geometry_msgs::PoseStamped expectedPosition)
     double y = current_pose.pose.position.y;
     double z = current_pose.pose.position.z;
     double diff = expectedPosition.pose.position.y + y;
-    ROS_INFO("Expected %.3f Current %.3f Diff %.3f", y, expectedPosition.pose.position.y, diff);
+    ROS_INFO("Expected %.3f Current %.3f Diff %.3f", expectedPosition.pose.position.y, y, diff);
     return std::abs(expectedPosition.pose.position.y + y) < 1.0;
 }
 
