@@ -379,8 +379,19 @@ int main(int argc, char **argv)
             // imwrite("/home/ubuntu/img_log/rim0.jpg", rimg[0]);
             // imwrite("/home/ubuntu/img_log/rimg1.jpg", rimg[1]);
             // cout << rimg[0].rows << " " << rimg[0].cols << endl;
-            resize(rimg[0], rimg[0], Size(w, h), 0, 0, INTER_AREA);
-            resize(rimg[1], rimg[1], Size(w, h), 0, 0, INTER_AREA);
+            if (rimg[0].data)
+            {
+                resize(rimg[0], rimg[0], Size(w, h), 0, 0, INTER_AREA);
+            }
+            else
+                cout << "No rimg[0] data" << endl;
+
+            if (rimg[1].data)
+            {
+                resize(rimg[1], rimg[0], Size(w, h), 0, 0, INTER_AREA);
+            }
+            else
+                cout << "No rimg[1] data" << endl;
 
             // cout << "Finish resizing image" << endl;
             cropped_left = rimg[0](vroi);
