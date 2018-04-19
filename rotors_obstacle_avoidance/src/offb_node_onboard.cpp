@@ -96,7 +96,7 @@ int main(int argc, char **argv)
 
     int obj_count;
     int wp_gen = 100;
-    vector<ellipse_desc> ellipse_list(20);
+    vector<ellipse_desc> ellipse_list(50);
     vector< pair<double, double> > waypoints(200);
     vector< pair<double, double> > waypoints_pub(200);
     
@@ -380,26 +380,29 @@ int main(int argc, char **argv)
 
             // imwrite("/home/ubuntu/img_log/rim0.jpg", rimg[0]);
             // imwrite("/home/ubuntu/img_log/rimg1.jpg", rimg[1]);
-            // cout << rimg[0].rows << " " << rimg[0].cols << endl;
-            // if (rimg[0].data)
-            // {
-            //     cout << "Resizing rimg[0]" << endl;
-            //     resize(rimg[0], rimg[1], Size(w, h), 0, 0, INTER_AREA);
-            // }
-            // else
-            //     cout << "No rimg[0] data" << endl;
+            cout << rimg[0].rows << " " << rimg[0].cols << endl;
+            if (rimg[0].data)
+            {
+                cout << "Resizing rimg[0]" << endl;
+                resize(rimg[0], rimg[1], Size(w, h), 0, 0, INTER_AREA);
+            }
+            else
+                cout << "No rimg[0] data" << endl;
 
-            // if (rimg[1].data)
-            // {
-            //     cout << "Resizing rimg[1]" << endl;
-            //     resize(rimg[0], rimg[1], Size(w, h), 0, 0, INTER_AREA);
-            // }
-            // else
-            //     cout << "No rimg[1] data" << endl;
+            if (rimg[1].data)
+            {
+                cout << "Resizing rimg[1]" << endl;
+                resize(rimg[0], rimg[1], Size(w, h), 0, 0, INTER_AREA);
+            }
+            else
+                cout << "No rimg[1] data" << endl;
 
             // cout << "Finish resizing image" << endl;
             cropped_left = rimg[0](vroi);
             cropped_right = rimg[1](vroi);
+
+            // imwrite("/home/ubuntu/img_log/cropped_left.jpg", rimg[0]);
+            // imwrite("/home/ubuntu/img_log/cropped_right.jpg", rimg[1]);
 
             SADWindowSize = 3;
             numberOfDisparities = 0;

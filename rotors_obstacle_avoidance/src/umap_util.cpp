@@ -61,7 +61,7 @@ namespace umap_utility
         int hist_size[] = {max_disp};
         float tmp_range[] = {0.0, (float)max_disp};
         const float *ranges[] = {tmp_range};
-        vector<ellipse_desc> ellipse_desc_objects(20);
+        vector<ellipse_desc> ellipse_desc_objects(50);
 
         // calculate map
         t = getTickCount();
