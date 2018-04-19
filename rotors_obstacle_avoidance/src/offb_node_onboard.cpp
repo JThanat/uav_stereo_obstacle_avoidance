@@ -274,7 +274,7 @@ int main(int argc, char **argv)
     ros::Time last_request = ros::Time::now();
     ros::Time last_calculation;
     
-    f = 1065; // in pixel 1 millimeter = 3.779528 pixel
+    f = 1065; // 
     b = 15;   // in cm
 
     loop_count = 0;
@@ -481,7 +481,7 @@ int main(int argc, char **argv)
                 se2[0] = se2[0] + 100; // 100 cm y boundary
                 
                 // cout << "drawn: " << pe1[0] << " " << pe2[0] << " " << 2*se1[0] << " " << 2*se2[0] << endl;
-                ellipse(obstacle_map, Point(cvRound(pe1[0] + 3000),cvRound(2000 - pe2[0])), Size(cvRound(se1[0] - 50),cvRound(se2[0] - 50)), 0, 0, 360, Scalar(0,0,255),2);
+                ellipse(obstacle_map, Point(cvRound(pe1[0] + 3000),cvRound(2000 - pe2[0])), Size(cvRound(se1[0] - 100),cvRound(se2[0] - 100)), 0, 0, 360, Scalar(0,0,255),2);
                 ellipse(obstacle_map, Point(cvRound(pe1[0] + 3000),cvRound(2000 - pe2[0])), Size(cvRound(se1[0]),cvRound(se2[0])), 0, 0, 360, Scalar(0,255,0),2);
             }
             num_wp = wp_gen - current_waypoint_index;
