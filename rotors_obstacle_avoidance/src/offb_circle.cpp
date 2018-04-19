@@ -27,13 +27,11 @@ void pose_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
 bool checkEqualPose(const geometry_msgs::PoseStamped expectedPosition)
 {
     double x = current_pose.pose.position.x;
-    double y = - current_pose.pose.position.y;
+    double y = current_pose.pose.position.y;
     double z = current_pose.pose.position.z;
-    return (
-        std::abs(expectedPosition.pose.position.x - x) < 0.5 && 
-        std::abs(expectedPosition.pose.position.y - y) < 0.5 && 
-        std::abs(expectedPosition.pose.position.z - z) < 0.5
-    );
+    double diff = expectedPosition.pose.position.y + y;
+    ROS_INFO("Expected %.3f Current %.3f Diff %.3f", y, expectedPosition.pose.position.y, diff);
+    return std::abs(expectedPosition.pose.position.y + y) < 1.0;
 }
 
 int main(int argc, char **argv)
@@ -59,40 +57,56 @@ int main(int argc, char **argv)
         rate.sleep();
     }
 
-    std::vector<geometry_msgs::PoseStamped> poses(20);
+    std::vector<geometry_msgs::PoseStamped> poses(2);
     poses[0].pose.position.x = 0;
     poses[0].pose.position.y = 0;
     poses[0].pose.position.z = 5;
+
+    poses[1].pose.position.x = 0;
+    poses[1].pose.position.y = 5;
+    poses[1].pose.position.z = 5;
     
     // Y -> N
     // X -> E
-    for (i = 0 ; i < 20 ; i++)
-    {
-        if(i <= 5)
-        {
-            poses[i].pose.position.x = 0;
-            poses[i].pose.position.y = i;
-            poses[i].pose.position.z = 5;
-        }
-        else if(i <= 10)
-        {
-            poses[i].pose.position.x = i - 5;
-            poses[i].pose.position.y = 5;
-            poses[i].pose.position.z = 5;
-        }
-        else if(i <= 15)
-        {
-            poses[i].pose.position.x = 5;
-            poses[i].pose.position.y = 15 - i;
-            poses[i].pose.position.z = 5;
-        }
-        else 
-        {
-            poses[i].pose.position.x = 20 - i;
-            poses[i].pose.position.y = 0;
-            poses[i].pose.position.z = 5;
-        }
-    }
+    // for (i = 0 ; i < 20 ; i++)
+    // {
+    //     if(i <= 5)
+    //     {
+    //         poses[i].pose.position.x = 0;
+    //         poses[i].pose.position.y = i;
+    //         poses[i].pose.position.z = 0;
+    //         // poses[i].pose.position.x = 0;
+    //         // poses[i].pose.position.y = i;
+    //         // poses[i].pose.position.z = 5;
+    //     }
+    //     else if(i <= 10)
+    //     {
+    //         poses[i].pose.position.x = 0;
+    //         poses[i].pose.position.y = 10 - i;
+    //         poses[i].pose.position.z = 5;
+    //         // poses[i].pose.position.x = i - 5;
+    //         // poses[i].pose.position.y = 5;
+    //         // poses[i].pose.position.z = 5;
+    //     }
+    //     else if(i <= 15)
+    //     {
+    //         poses[i].pose.position.x = 0;
+    //         poses[i].pose.position.y = i - 10;
+    //         poses[i].pose.position.z = 5;
+    //         // poses[i].pose.position.x = 5;
+    //         // poses[i].pose.position.y = 15 - i;
+    //         // poses[i].pose.position.z = 5;
+    //     }
+    //     else 
+    //     {
+    //         poses[i].pose.position.x = 0;
+    //         poses[i].pose.position.y = 20 - i;
+    //         poses[i].pose.position.z = 5;
+    //         // poses[i].pose.position.x = 20 - i;
+    //         // poses[i].pose.position.y = 0;
+    //         // poses[i].pose.position.z = 5;
+    //     }
+    // }
 
     //send a few setpoints before starting
     for(int i = 100; ros::ok() && i > 0; --i){
@@ -144,11 +158,11 @@ int main(int argc, char **argv)
             }
 
         }
-        if(checkEqualPose(poses[i%20]))
+        if(checkEqualPose(poses[i%2]))
         {
             i++;
         }
-        ROS_INFO("Index: %D Current Pose %.f %.f %.f\n", i,current_pose.pose.position.x, current_pose.pose.position.y, current_pose.pose.position.z );
+        ROS_INFO("Index: %d Current Pose %.f %.f %.f\n", i,current_pose.pose.position.x, current_pose.pose.position.y, current_pose.pose.position.z );
         // std::cout << "Index " << "i" << std::endl;
         // std::cout << "Current Pose: " << current_pose.pose.position.x << " " << current_pose.pose.position.y << " " << current_pose.pose.position.z << std::endl;
 
