@@ -115,6 +115,7 @@ int main(int argc, char **argv)
     Mat R, T, R1, R2, P1, P2, Q;
     Mat cropped_left, cropped_right;
     Mat camera_matrix[2], dist_coeffs[2];
+    Mat rimg0, rimg1;
     Mat rimg[2], cimg;
     Mat rmap[2][2];
     Rect validRoi[2];
@@ -371,38 +372,38 @@ int main(int argc, char **argv)
             initUndistortRectifyMap(camera_matrix[0], dist_coeffs[0], R1, P1, image_size, CV_16SC2, rmap[0][0], rmap[0][1]);
             initUndistortRectifyMap(camera_matrix[1], dist_coeffs[1], R2, P2, image_size, CV_16SC2, rmap[1][0], rmap[1][1]);
             cout << "Finish Initializing Undistort Map" << endl;
-            remap(left_image_debayer, rimg[0], rmap[0][0], rmap[0][1], INTER_LINEAR);
-            remap(right_image_debayer, rimg[1], rmap[1][0], rmap[1][1], INTER_LINEAR);
+            remap(left_image_debayer, rimg0, rmap[0][0], rmap[0][1], INTER_LINEAR);
+            remap(right_image_debayer, rimg1, rmap[1][0], rmap[1][1], INTER_LINEAR);
             cout << "Finish Remapping" << endl;
             // use second region of interest because it is smaller for this specific camera calibration
             Rect vroi(cvRound(VROIX*sf), cvRound(VROIY*sf),
                     cvRound(VROIW*sf), cvRound(VROIH*sf));
 
-            // imwrite("/home/ubuntu/img_log/rim0.jpg", rimg[0]);
-            // imwrite("/home/ubuntu/img_log/rimg1.jpg", rimg[1]);
-            cout << rimg[0].rows << " " << rimg[0].cols << endl;
-            if (rimg[0].data)
+            // imwrite("/home/ubuntu/img_log/rim0.jpg", rimg0);
+            // imwrite("/home/ubuntu/img_log/rimg1.jpg", rimg1);
+            cout << rimg0.rows << " " << rimg0.cols << endl;
+            if (rimg0.data)
             {
-                cout << "Resizing rimg[0]" << endl;
-                cv::resize(rimg[0], rimg[0], Size(w, h), 0, 0, INTER_AREA);
+                cout << "Resizing rimg0" << endl;
+                cv::resize(rimg0, rimg0, Size(w, h), 0, 0, INTER_AREA);
             }
             else
-                cout << "No rimg[0] data" << endl;
+                cout << "No rimg0 data" << endl;
 
-            if (rimg[1].data)
+            if (rimg1.data)
             {
-                cout << "Resizing rimg[1]" << endl;
-                cv::resize(rimg[1], rimg[1], Size(w, h), 0, 0, INTER_AREA);
+                cout << "Resizing rimg1" << endl;
+                cv::resize(rimg1, rimg1, Size(w, h), 0, 0, INTER_AREA);
             }
             else
-                cout << "No rimg[1] data" << endl;
+                cout << "No rimg1 data" << endl;
 
             // cout << "Finish resizing image" << endl;
-            cropped_left = rimg[0](vroi);
-            cropped_right = rimg[1](vroi);
+            cropped_left = rimg0(vroi);
+            cropped_right = rimg1(vroi);
 
-            // imwrite("/home/ubuntu/img_log/cropped_left.jpg", rimg[0]);
-            // imwrite("/home/ubuntu/img_log/cropped_right.jpg", rimg[1]);
+            // imwrite("/home/ubuntu/img_log/cropped_left.jpg", rimg0);
+            // imwrite("/home/ubuntu/img_log/cropped_right.jpg", rimg1);
 
             SADWindowSize = 3;
             numberOfDisparities = 0;
