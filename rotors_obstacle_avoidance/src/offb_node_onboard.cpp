@@ -384,7 +384,7 @@ int main(int argc, char **argv)
             if (rimg[0].data)
             {
                 cout << "Resizing rimg[0]" << endl;
-                resize(rimg[0], rimg[1], Size(w, h), 0, 0, INTER_AREA);
+                cv::resize(rimg[0], rimg[0], Size(w, h), 0, 0, INTER_AREA);
             }
             else
                 cout << "No rimg[0] data" << endl;
@@ -392,7 +392,7 @@ int main(int argc, char **argv)
             if (rimg[1].data)
             {
                 cout << "Resizing rimg[1]" << endl;
-                resize(rimg[0], rimg[1], Size(w, h), 0, 0, INTER_AREA);
+                cv::resize(rimg[1], rimg[1], Size(w, h), 0, 0, INTER_AREA);
             }
             else
                 cout << "No rimg[1] data" << endl;
