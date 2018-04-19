@@ -462,8 +462,8 @@ int main(int argc, char **argv)
             {
                 ellipse_list[i].u1 = ellipse_list[i].u1 - image_size.width/2; // set position of the drone at the center of the image
                 ellipse_list[i].u2 = ellipse_list[i].u2 - image_size.width/2;
-                ellipse_list[i].d1 = ellipse_list[i].d1/16;
-                ellipse_list[i].d2 = ellipse_list[i].d2/16;
+                ellipse_list[i].d1 = ellipse_list[i].d1;
+                ellipse_list[i].d2 = ellipse_list[i].d2;
  
                 ellipse_list[i].BPe = (Mat_<double>(2, 1) << b*(ellipse_list[i].u1 + ellipse_list[i].u2)/(2*ellipse_list[i].d2), f*b/(ellipse_list[i].d2));
                 ellipse_list[i].BSe = (Mat_<double>(2, 1) << b*(ellipse_list[i].u2 - ellipse_list[i].u1)/(2*ellipse_list[i].d2), f*b/(ellipse_list[i].d2) - f*b/(ellipse_list[i].d1));
