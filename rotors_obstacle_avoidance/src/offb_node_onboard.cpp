@@ -363,8 +363,8 @@ int main(int argc, char **argv)
             image_size = left_image_debayer.size();
             cout << image_size.height << " " << image_size.width << endl;
             sf = 600. / MAX(image_size.width, image_size.height);
-            w = cvRound(image_size.width * sf);
-            h = cvRound(image_size.height * sf);
+            w = cvRound(image_size.width);
+            h = cvRound(image_size.height);
 
             // undistort and rectify
             t = getTickCount();
@@ -381,21 +381,21 @@ int main(int argc, char **argv)
             // imwrite("/home/ubuntu/img_log/rim0.jpg", rimg[0]);
             // imwrite("/home/ubuntu/img_log/rimg1.jpg", rimg[1]);
             // cout << rimg[0].rows << " " << rimg[0].cols << endl;
-            if (rimg[0].data)
-            {
-                cout << "Resizing rimg[0]" << endl;
-                resize(rimg[0], rimg[1], Size(w, h), 0, 0, INTER_AREA);
-            }
-            else
-                cout << "No rimg[0] data" << endl;
+            // if (rimg[0].data)
+            // {
+            //     cout << "Resizing rimg[0]" << endl;
+            //     resize(rimg[0], rimg[1], Size(w, h), 0, 0, INTER_AREA);
+            // }
+            // else
+            //     cout << "No rimg[0] data" << endl;
 
-            if (rimg[1].data)
-            {
-                cout << "Resizing rimg[1]" << endl;
-                resize(rimg[0], rimg[1], Size(w, h), 0, 0, INTER_AREA);
-            }
-            else
-                cout << "No rimg[1] data" << endl;
+            // if (rimg[1].data)
+            // {
+            //     cout << "Resizing rimg[1]" << endl;
+            //     resize(rimg[0], rimg[1], Size(w, h), 0, 0, INTER_AREA);
+            // }
+            // else
+            //     cout << "No rimg[1] data" << endl;
 
             // cout << "Finish resizing image" << endl;
             cropped_left = rimg[0](vroi);
