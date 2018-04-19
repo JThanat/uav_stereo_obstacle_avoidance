@@ -63,7 +63,7 @@ int main(int argc, char **argv)
     poses[0].pose.position.z = 5;
 
     poses[1].pose.position.x = 0;
-    poses[1].pose.position.y = 5;
+    poses[1].pose.position.y = -5;
     poses[1].pose.position.z = 5;
     
     // Y -> N
@@ -159,7 +159,6 @@ int main(int argc, char **argv)
 
         }
 
-        ROS_INFO("Index: %d Current Pose %.f %.f %.f\n", i,current_pose.pose.position.x, current_pose.pose.position.y, current_pose.pose.position.z );
         // if (i%2 == 0)
         // {
         //     // y at 0 
@@ -169,14 +168,15 @@ int main(int argc, char **argv)
         // {
         //     if (current_pose.pose.position.y >= 4.0) i++;
         // }
-        if(checkEqualPose(poses[i%2]))
-        {
-            i++;
-        }
+        // if(checkEqualPose(poses[i%2]))
+        // {
+        //     i++;
+        // }
+        ROS_INFO("Index: %d Current Pose %.f %.f %.f\n", i,current_pose.pose.position.x, current_pose.pose.position.y, current_pose.pose.position.z );
+        local_pos_pub.publish(poses[1]);
         // std::cout << "Index " << "i" << std::endl;
         // std::cout << "Current Pose: " << current_pose.pose.position.x << " " << current_pose.pose.position.y << " " << current_pose.pose.position.z << std::endl;
 
-        local_pos_pub.publish(poses[i%2]);
         ros::spinOnce();
         rate.sleep();
     }
