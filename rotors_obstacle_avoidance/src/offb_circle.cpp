@@ -107,7 +107,7 @@ int main(int argc, char **argv)
 
     i = 0;
     while(ros::ok()) {
-        ROS_INFO("Current Mode %s\n", current_state.mode.data.c_str());
+        ROS_INFO("Current Mode %s\n", current_state.mode.c_str());
         if (current_state.mode != "GUIDED")
         {
             
