@@ -158,11 +158,12 @@ int main(int argc, char **argv)
             }
 
         }
+
+        ROS_INFO("Index: %d Current Pose %.f %.f %.f\n", i,current_pose.pose.position.x, current_pose.pose.position.y, current_pose.pose.position.z );
         if(checkEqualPose(poses[i%2]))
         {
             i++;
         }
-        ROS_INFO("Index: %d Current Pose %.f %.f %.f\n", i,current_pose.pose.position.x, current_pose.pose.position.y, current_pose.pose.position.z );
         // std::cout << "Index " << "i" << std::endl;
         // std::cout << "Current Pose: " << current_pose.pose.position.x << " " << current_pose.pose.position.y << " " << current_pose.pose.position.z << std::endl;
 
