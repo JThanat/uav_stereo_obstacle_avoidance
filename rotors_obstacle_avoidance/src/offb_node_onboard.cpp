@@ -120,7 +120,8 @@ int main(int argc, char **argv)
     Mat rmap[2][2];
     Rect validRoi[2];
     int VROIX, VROIY, VROIW, VROIH;
-    int sf, w, h;
+    int w, h;
+    double sf;
 
     // Copy the data into an OpenCV Mat structure
     uint8_t *ptr_i, *ptr_i1, *dbptr;
@@ -366,8 +367,6 @@ int main(int argc, char **argv)
             sf = 600. / MAX(image_size.width, image_size.height);
             w = cvRound(image_size.width * sf);
             h = cvRound(image_size.height * sf);
-            cout << w << " " << h << " " << endl;
-            cout << Size(w,h).area() << endl;
 
             // undistort and rectify
             t = getTickCount();
