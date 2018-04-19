@@ -199,11 +199,11 @@ namespace umap_utility
 
         t = getTickCount() - t;
         cout << "Connect the Line Time elapsed: " << t * 1000 / getTickFrequency() << "ms" << endl;
-        sprintf( filename, "./uhist%d.jpg", loop_count );
+        sprintf( filename, "/home/ubuntu/img_log/uhist%d.jpg", loop_count );
         imwrite(filename, uhist_vis);
-        sprintf( filename, "./group_rect%d.jpg", loop_count ); 
+        sprintf( filename, "/home/ubuntu/img_log/group_rect%d.jpg", loop_count ); 
         imwrite(filename, group_rect);
-        sprintf( filename, "./uline%d.jpg", loop_count ); 
+        sprintf( filename, "/home/ubuntu/img_log/uline%d.jpg", loop_count ); 
         imwrite(filename, uline_mask);
 
         // return u1, u2, d1, d2 of each object
