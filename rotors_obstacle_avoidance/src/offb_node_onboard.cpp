@@ -444,8 +444,11 @@ int main(int argc, char **argv)
             
             ellipse_list = calculate_udisparity(disp8, max, image_size, obj_count, loop_count);
 
-            current_x = poses[current_waypoint_index].pose.position.x*100; // need update
-            current_y = poses[current_waypoint_index].pose.position.y*100; // need update
+            // current_x = poses[current_waypoint_index].pose.position.x*100; 
+            // current_y = poses[current_waypoint_index].pose.position.y*100;
+
+            current_x = 0; 
+            current_y = 0;
 
             GYb = 0; // 0 degree for now
             Mat WRr = (Mat_<double>(2, 2) << cos(90 * M_PI / 180), -sin(90 * M_PI / 180), sin(90 * M_PI / 180), cos(90 * M_PI / 180));
