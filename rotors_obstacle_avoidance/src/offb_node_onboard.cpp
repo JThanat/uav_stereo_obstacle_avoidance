@@ -442,19 +442,7 @@ int main(int argc, char **argv)
             imwrite(filename, disp8);
             minMaxLoc(disp8, &min, &max, NULL, NULL);
             
-            // for mock up only
-            if (loop_count == 1)
-            {
-                ROS_INFO("Mock up map");
-                image_size = Size(800,600);
-                obj_count = 1;
-                ellipse_list[0].u1 = 300;
-                ellipse_list[0].u2 = 500;
-                ellipse_list[0].d1 = 16.0;
-                ellipse_list[0].d2 = 14.4;
-            } else {
-                ellipse_list = calculate_udisparity(disp8, max, image_size, obj_count, loop_count);
-            }
+            ellipse_list = calculate_udisparity(disp8, max, image_size, obj_count, loop_count);
 
             current_x = poses[current_waypoint_index].pose.position.x*100; // need update
             current_y = poses[current_waypoint_index].pose.position.y*100; // need update
