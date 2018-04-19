@@ -104,6 +104,8 @@ int main(int argc, char **argv)
 
     Mat left_image(1842, 2432, CV_16UC1);
     Mat right_image(1842, 2432, CV_16UC1);
+    Mat left_image_8uc1(1842, 2432, CV_8UC1);
+    Mat right_image_8uc1(1842, 2432, CV_8UC1);
     Mat left_image_debayer(921, 1216, CV_8UC1);
     Mat right_image_debayer(921, 1216, CV_8UC1);
     Mat disp(600,800, CV_8UC3);
@@ -324,21 +326,21 @@ int main(int argc, char **argv)
             // getting image
             // imwrite("/home/ubuntu/img_log/left_image_16C.jpg", left_image);
             t = getTickCount();
-            left_image.convertTo(left_image, CV_8UC1, 1);
-            right_image.convertTo(right_image, CV_8UC1, 1);
+            left_image.convertTo(left_image_8uc1, CV_8UC1, 1);
+            right_image.convertTo(right_image_8uc1, CV_8UC1, 1);
             // imwrite("/home/ubuntu/img_log/left_image.jpg", left_image);
             for (i = 0 ; i < left_image.rows/2 ; i++)
             {
                 ib = i*2;
-                ptr_i = left_image.ptr<uint8_t>(ib);
-                ptr_i1 = left_image.ptr<uint8_t>(ib+1);
+                ptr_i = left_image_8uc1.ptr<uint8_t>(ib);
+                ptr_i1 = left_image_8uc1.ptr<uint8_t>(ib+1);
                 dbptr = left_image_debayer.ptr<uint8_t>(i);
 
-                rptr_i = right_image.ptr<uint8_t>(ib);
-                rptr_i1 = right_image.ptr<uint8_t>(ib+1);
+                rptr_i = right_image_8uc1.ptr<uint8_t>(ib);
+                rptr_i1 = right_image_8uc1.ptr<uint8_t>(ib+1);
                 rdbptr = right_image_debayer.ptr<uint8_t>(i);
 
-                for ( j = 0 ; j < left_image.cols/2 ; j++)
+                for ( j = 0 ; j < left_image_8uc1.cols/2 ; j++)
                 {
                     jb = j*2;
                     green = int((ptr_i[jb] + ptr_i1[jb+1])/2);
