@@ -383,14 +383,16 @@ int main(int argc, char **argv)
             // cout << rimg[0].rows << " " << rimg[0].cols << endl;
             if (rimg[0].data)
             {
-                resize(rimg[0], rimg[0], Size(w, h), 0, 0, INTER_AREA);
+                cout << "Resizing rimg[0]" << endl;
+                resize(rimg[0], rimg[1], Size(w, h), 0, 0, INTER_AREA);
             }
             else
                 cout << "No rimg[0] data" << endl;
 
             if (rimg[1].data)
             {
-                resize(rimg[1], rimg[0], Size(w, h), 0, 0, INTER_AREA);
+                cout << "Resizing rimg[1]" << endl;
+                resize(rimg[0], rimg[1], Size(w, h), 0, 0, INTER_AREA);
             }
             else
                 cout << "No rimg[1] data" << endl;
