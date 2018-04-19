@@ -26,10 +26,13 @@ void pose_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
 
 bool checkEqualPose(const geometry_msgs::PoseStamped expectedPosition)
 {
+    double x = current_pose.pose.position.x;
+    double y = - current_pose.pose.position.y;
+    double z = current_pose.pose.position.z;
     return (
-        std::abs(expectedPosition.pose.position.x - current_pose.pose.position.x) < 0.5 && 
-        std::abs(expectedPosition.pose.position.y - current_pose.pose.position.y) < 0.5 && 
-        std::abs(expectedPosition.pose.position.z - current_pose.pose.position.z) < 0.5
+        std::abs(expectedPosition.pose.position.x - x) < 0.5 && 
+        std::abs(expectedPosition.pose.position.y - y) < 0.5 && 
+        std::abs(expectedPosition.pose.position.z - z) < 0.5
     );
 }
 
