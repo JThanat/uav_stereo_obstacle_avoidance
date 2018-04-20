@@ -348,12 +348,12 @@ int main(int argc, char **argv)
                     green = int((ptr_i[jb] + ptr_i1[jb+1])/2);
                     red = int(ptr_i[jb+1]);
                     blue = int(ptr_i1[jb]);
-                    dbptr[j] = uint8_t(sqrt(0.299*red*red + 0.587*green*green + 0.114*blue*blue));
+                    dbptr[j] = uint8_t((red + red  + blue + green + green + green))/6;
 
                     green = int(rptr_i[jb] + rptr_i1[jb+1])/2;
                     red = int(rptr_i[jb+1]);
                     blue = int(rptr_i1[jb]);
-                    rdbptr[j] = uint8_t(sqrt(0.299*red*red + 0.587*green*green + 0.114*blue*blue));
+                    rdbptr[j] = uint8_t((red + red  + blue + green + green + green))/6;
                 }
             }
             t = getTickCount() - t;
