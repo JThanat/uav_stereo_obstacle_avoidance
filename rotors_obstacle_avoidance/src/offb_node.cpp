@@ -124,7 +124,7 @@ int main(int argc, char **argv)
     bool ready = false;
 
     int obj_count;
-    int wp_gen = 200;
+    int wp_gen = 50;
     vector<ellipse_desc> ellipse_list(20);
     vector< pair<double, double> > waypoints(200);
     vector< pair<double, double> > waypoints_pub(200);
@@ -166,7 +166,7 @@ int main(int argc, char **argv)
     // mock up waypoint
     for (i = 0; i < wp_gen ; i++)
     {
-        poses[i].pose.position.x = 0.2*i;
+        poses[i].pose.position.x = 1.0*i;
         poses[i].pose.position.y = 0.0;
         poses[i].pose.position.z = 2.0;
     }
@@ -188,7 +188,7 @@ int main(int argc, char **argv)
     ros::Time last_request = ros::Time::now();
     ros::Time last_calculation;
     
-    f = 30; // in pixel 1 millimeter = 3.779528 pixel
+    f = 1000; // in pixel 1 millimeter = 3.779528 pixel
     b = 15;   // in cm
 
     loop_count = 0;
@@ -284,7 +284,7 @@ int main(int argc, char **argv)
             cv::minMaxLoc(disp8, &min, &max, NULL, NULL);
             
             // for mock up only
-            if (loop_count == 1)
+            if (loop_count == -1)
             {
                 ROS_INFO("Mock up map");
                 image_size = Size(800,600);
@@ -312,8 +312,8 @@ int main(int argc, char **argv)
             {
                 ellipse_list[i].u1 = ellipse_list[i].u1 - image_size.width/2; // set position of the drone at the center of the image
                 ellipse_list[i].u2 = ellipse_list[i].u2 - image_size.width/2;
-                ellipse_list[i].d1 = ellipse_list[i].d1/16;
-                ellipse_list[i].d2 = ellipse_list[i].d2/16;
+                ellipse_list[i].d1 = ellipse_list[i].d1;
+                ellipse_list[i].d2 = ellipse_list[i].d2;
  
                 ellipse_list[i].BPe = (Mat_<double>(2, 1) << b*(ellipse_list[i].u1 + ellipse_list[i].u2)/(2*ellipse_list[i].d2), f*b/(ellipse_list[i].d2));
                 ellipse_list[i].BSe = (Mat_<double>(2, 1) << b*(ellipse_list[i].u2 - ellipse_list[i].u1)/(2*ellipse_list[i].d2), f*b/(ellipse_list[i].d2) - f*b/(ellipse_list[i].d1));
