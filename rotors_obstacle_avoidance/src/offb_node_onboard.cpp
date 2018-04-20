@@ -357,6 +357,7 @@ int main(int argc, char **argv)
                 }
             }
             t = getTickCount() - t;
+            printf("Testing new algo");
             printf("loop debayer time: %fms\n", t * 1000 / getTickFrequency());
             // imwrite("/home/ubuntu/img_log/left_debayer.jpg", left_image_debayer);
 
