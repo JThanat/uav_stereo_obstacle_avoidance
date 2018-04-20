@@ -357,8 +357,13 @@ int main(int argc, char **argv)
                 }
             }
             t = getTickCount() - t;
-            printf("Testing new algo");
             printf("loop debayer time: %fms\n", t * 1000 / getTickFrequency());
+
+            t = getTickCount();
+            cvtColor(left_image_8uc1, left_image_8uc1, COLOR_BayerGR2BGR);
+            resize(left_image_8uc1, left_image_8uc1, left_image_8uc1.sze(), 0, 0, INTER_AREA);
+            t = getTickCount() - t;
+            printf("Debayer and resize Opencv %fms\n", );
             // imwrite("/home/ubuntu/img_log/left_debayer.jpg", left_image_debayer);
 
             // rectify
