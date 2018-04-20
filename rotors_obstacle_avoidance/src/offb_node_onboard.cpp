@@ -345,14 +345,14 @@ int main(int argc, char **argv)
                 for ( j = 0 ; j < left_image_8uc1.cols/2 ; j++)
                 {
                     jb = j*2;
-                    green = int((ptr_i[jb] + ptr_i1[jb+1])/2);
-                    red = int(ptr_i[jb+1]);
-                    blue = int(ptr_i1[jb]);
-                    dbptr[j] = uint8_t((red + red  + blue + green + green + green))/6;
+                    green = (ptr_i[jb] + ptr_i1[jb+1])/2;
+                    red = ptr_i[jb+1];
+                    blue = ptr_i1[jb];
+                    dbptr[j] =  uint8_t((red + red  + blue + green + green + green))/6;
 
-                    green = int(rptr_i[jb] + rptr_i1[jb+1])/2;
-                    red = int(rptr_i[jb+1]);
-                    blue = int(rptr_i1[jb]);
+                    green = (rptr_i[jb] + rptr_i1[jb+1])/2;
+                    red = rptr_i[jb+1];
+                    blue = rptr_i1[jb];
                     rdbptr[j] = uint8_t((red + red  + blue + green + green + green))/6;
                 }
             }
