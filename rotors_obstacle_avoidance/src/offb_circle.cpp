@@ -131,58 +131,19 @@ int main(int argc, char **argv)
 
     i = 0;
     while(ros::ok()) {
-        // if (current_state.mode != "GUIDED")
-        // {
-            
-        //     ROS_INFO("Vehicle is not in GUIDED Mode");
-        //     continue;
-        // }
-        if (current_state.mode != "GUIDED" &&
-            (ros::Time::now() - last_request > ros::Duration(5.0)))
-        {
-            if (set_mode_client.call(offb_set_mode) &&
-                offb_set_mode.response.mode_sent)
-            {
-                ROS_INFO("GUIDED enabled");
-                enabled = true;
-            }
-            last_request = ros::Time::now();
-        }
-        else if(current_state.mode == "GUIDED")
-        {
-            enabled = true;
-            if(current_state.armed)
-            {
-                armed = true;
-            }
-            else if (!current_state.armed &&
-                (ros::Time::now() - last_request > ros::Duration(5.0)))
-            {
-                if (arming_client.call(arm_cmd) &&
-                    arm_cmd.response.success)
-                {
-                    ROS_INFO("Vehicle armed");
-                    armed = true;
-                }
-                last_request = ros::Time::now();
-            }
-
-        }
-
-        if (!enabled || !armed)
-        {
-            ROS_INFO("Pub 0");
-            global_pos_pub.publish(poses[0]);
-        } 
-        else
-        {
+        if (current_state.mode != "GUIDED") {
+            ROS_INFO("Vehicle is not in GUIDED Mode");
+            ros::spinOnce();
+            rate.sleep();
+            continue;
+        } else {
             ROS_INFO("Pub 1");
             ROS_INFO("PUB TO %.6f %.6f %.6f", poses[1].latitude, poses[1].longitude, poses[1].altitude);
             global_pos_pub.publish(poses[1]);
+            ros::spinOnce();
+            rate.sleep();
         }
 
-        ros::spinOnce();
-        rate.sleep();
     }
 
     return 0;
