@@ -97,7 +97,7 @@ int main(int argc, char **argv)
 
     std::cout <<  poses[0].latitude << " " <<  poses[0].longitude << " " << poses[0].altitude << std::endl;
 
-    poses[1].latitude = current_pose.latitude + 0.01;
+    poses[1].latitude = current_pose.latitude + 0.005;
     poses[1].longitude = current_pose.longitude;
     poses[1].altitude = 5;
     poses[1].velocity.x = 2.0;
