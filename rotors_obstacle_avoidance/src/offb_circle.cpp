@@ -28,6 +28,12 @@ void pose_cb(const sensor_msgs::NavSatFix::ConstPtr &msg)
     current_pose = *msg;
 }
 
+bool atZeroLatLong()
+{
+    // check if it is around 0 0 point
+    return abs(current_pose.latitude - 0.0) < std::numeric_limits<double>::epsilon() && abs(current_pose.longitude - 0.0) < std::numeric_limits<double>::epsilon();
+}
+
 // bool checkEqualPose(const geometry_msgs::PoseStamped expectedPosition)
 // {
 //     return (
@@ -58,6 +64,14 @@ int main(int argc, char **argv)
 
     // wait for FCU connection
     while(ros::ok() && !current_state.connected){
+        std::cout << current_pose.latitude << " " << current_pose.longitude << std::endl;
+        ros::spinOnce();
+        rate.sleep();
+    }
+
+    while(atZeroLatLong())
+    {
+        std::cout << current_pose.latitude << " " << current_pose.longitude << std::endl;
         ros::spinOnce();
         rate.sleep();
     }
@@ -78,7 +92,7 @@ int main(int argc, char **argv)
     poses[0].acceleration_or_force.y = 2;
     poses[0].acceleration_or_force.z = 2;
     poses[0].coordinate_frame = gbpos::FRAME_GLOBAL_REL_ALT;
-    poses[0].type_mask = gbpos::IGNORE_YAW_RATE + gbpos::IGNORE_YAW + gbpos::FORCE;
+    poses[0].type_mask = 4088;
 
     std::cout <<  poses[0].latitude << " " <<  poses[0].longitude << " " << poses[0].altitude << std::endl;
 
@@ -92,7 +106,7 @@ int main(int argc, char **argv)
     poses[1].acceleration_or_force.y = 2;
     poses[1].acceleration_or_force.z = 2;
     poses[1].coordinate_frame = gbpos::FRAME_GLOBAL_REL_ALT;
-    poses[1].type_mask = gbpos::IGNORE_YAW_RATE + gbpos::IGNORE_YAW + gbpos::FORCE;
+    poses[1].type_mask = 4088;
 
 
     std::cout <<  poses[1].latitude << " " <<  poses[1].longitude << " " << poses[1].altitude << std::endl;
