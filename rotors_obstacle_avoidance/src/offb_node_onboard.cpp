@@ -579,7 +579,7 @@ int main(int argc, char **argv)
             }
             for ( i = 0 ; i < num_wp ; i++)
             {
-                ROS_INFO("waypoint lat: %.8f long: %.8f", (global_home_pose.latitude + local_poses[current_waypoint_index+i].pose.position.x/111111.0), (global_home_pose.longitude + local_poses[current_waypoint_index+i].pose.position.y/111111.0);
+                ROS_INFO("waypoint lat: %.8f long: %.8f", (global_home_pose.latitude + local_poses[current_waypoint_index+i].pose.position.x/111111.0), (global_home_pose.longitude + local_poses[current_waypoint_index+i].pose.position.y/111111.0));
             }
 
             sprintf( filename, "/home/ubuntu/img_log/obstacle_map%d.jpg", loop_count );
