@@ -266,13 +266,13 @@ int main(int argc, char **argv)
     }
 
     bool trigger_new_guided = false;
-    while (current_state.mode != "GUIDED")
-    {
-        ROS_INFO("Not in GUIDED MODE....Wait for position set up");
-        ros::spinOnce();
-        rate.sleep();
-        trigger_new_guided = true;
-    }
+    // while (current_state.mode != "GUIDED")
+    // {
+    //     ROS_INFO("Not in GUIDED MODE....Wait for position set up");
+    //     ros::spinOnce();
+    //     rate.sleep();
+    //     trigger_new_guided = true;
+    // }
     
     ROS_INFO("set pose array");
 
