@@ -197,7 +197,7 @@ int main(int argc, char **argv)
 	cameraState *c2 = init_camera(dev_name2, 2432, 1842, 1, 3, 2);
 
 	int control_val, control_val2;
-	v4l2SetControl(c1, V4L2_CID_EXPOSURE, 10);
+	v4l2SetControl(c1, V4L2_CID_EXPOSURE, 2);
 	control_val = v4l2GetControl(c1, V4L2_CID_EXPOSURE);
 	fprintf(stderr, "set value:%d\n", control_val);
 
@@ -205,7 +205,7 @@ int main(int argc, char **argv)
 	control_val = v4l2GetControl(c1, V4L2_CID_GAIN);
 	fprintf(stderr, "set value:%d\n", control_val);
 
-	v4l2SetControl(c2, V4L2_CID_EXPOSURE, 10);
+	v4l2SetControl(c2, V4L2_CID_EXPOSURE, 2);
 	control_val2 = v4l2GetControl(c2, V4L2_CID_EXPOSURE);
 	fprintf(stderr, "set value:%d\n", control_val2);
 
