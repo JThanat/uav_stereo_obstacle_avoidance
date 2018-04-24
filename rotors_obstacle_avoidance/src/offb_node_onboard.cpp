@@ -168,7 +168,7 @@ int main(int argc, char **argv)
         fs.release();
     }
     else
-        cout << "Error: can not read the intrinsic parameters\n";
+        ROS_INFO("Error: can not read the intrinsic parameters\n");
 
     fs.open("/home/ubuntu/.ros/extrinsics.yml", CV_STORAGE_READ);
     if (fs.isOpened())
@@ -189,7 +189,7 @@ int main(int argc, char **argv)
         fs.release();
     }
     else
-        cout << "Error: can not read the extrinsic parameters\n";
+        ROS_INFO("Error: can not read the intrinsic parameters\n");
 
 	
     std::thread spi_thread(getimage::flushBuffer); // signal every 250 ms
@@ -443,7 +443,7 @@ int main(int argc, char **argv)
             // rectify
             // set up other values
             image_size = left_image_debayer.size();
-            cout << image_size.height << " " << image_size.width << endl;
+            // cout << image_size.height << " " << image_size.width << endl;
             sf = 600. / MAX(image_size.width, image_size.height);
             w = cvRound(image_size.width * sf);
             h = cvRound(image_size.height * sf);
@@ -452,10 +452,10 @@ int main(int argc, char **argv)
             t = getTickCount();
             initUndistortRectifyMap(camera_matrix[0], dist_coeffs[0], R1, P1, image_size, CV_16SC2, rmap[0][0], rmap[0][1]);
             initUndistortRectifyMap(camera_matrix[1], dist_coeffs[1], R2, P2, image_size, CV_16SC2, rmap[1][0], rmap[1][1]);
-            cout << "Finish Initializing Undistort Map" << endl;
+            ROS_INFO("Finish Initializing Undistort Map");
             remap(left_image_debayer, rimg0, rmap[0][0], rmap[0][1], INTER_LINEAR);
             remap(right_image_debayer, rimg1, rmap[1][0], rmap[1][1], INTER_LINEAR);
-            cout << "Finish Remapping" << endl;
+            ROS_INFO("Finish Remapping");
             // use second region of interest because it is smaller for this specific camera calibration
             Rect vroi(cvRound(VROIX*sf), cvRound(VROIY*sf),
                     cvRound(VROIW*sf), cvRound(VROIH*sf));
@@ -514,7 +514,7 @@ int main(int argc, char **argv)
             t = getTickCount();
             sgbm(cropped_left, cropped_right, disp);
             t = getTickCount() - t;
-            printf("Disparity Time elapsed: %fms\n", t * 1000 / getTickFrequency());
+            ROS_INFO("Disparity Time elapsed: %fms\n", t * 1000 / getTickFrequency());
 
             if (alg != STEREO_VAR)
                 disp.convertTo(disp8, CV_8U, 255 / (numberOfDisparities * 16.));
@@ -573,9 +573,15 @@ int main(int argc, char **argv)
             
             for ( i = 0 ; i < num_wp - 1 ; i++)
             {
-                cout << "waypoint" << " " << cvRound(-local_poses[current_waypoint_index+i].pose.position.y*100+3000) << " " << cvRound(2000 - local_poses[current_waypoint_index+i].pose.position.x*100) << " " << endl;
+                ROS_INFO("waypoint x: %d y: %d", cvRound(-local_poses[current_waypoint_index+i].pose.position.y*100+3000), cvRound(2000 - local_poses[current_waypoint_index+i].pose.position.x*100));
+                // cout << "waypoint" << " " << cvRound(-local_poses[current_waypoint_index+i].pose.position.y*100+3000) << " " << cvRound(2000 - local_poses[current_waypoint_index+i].pose.position.x*100) << " " << endl;
                 line(obstacle_map, Point(cvRound(-local_poses[current_waypoint_index+i].pose.position.y*100+3000), cvRound(2000 - local_poses[current_waypoint_index+i].pose.position.x*100)), Point(cvRound(-local_poses[current_waypoint_index+i+1].pose.position.y*100 + 3000), cvRound(2000 - local_poses[current_waypoint_index+i+1].pose.position.x*100)), Scalar(0,0,255), 2);
             }
+            for ( i = 0 ; i < num_wp ; i++)
+            {
+                ROS_INFO("waypoint lat: %.8f long: %.8f", (global_home_pose.latitude + local_poses[current_waypoint_index+i].pose.position.x/111111.0), (global_home_pose.longitude + local_poses[current_waypoint_index+i].pose.position.y/111111.0);
+            }
+
             sprintf( filename, "/home/ubuntu/img_log/obstacle_map%d.jpg", loop_count );
             imwrite(filename, obstacle_map);
 
