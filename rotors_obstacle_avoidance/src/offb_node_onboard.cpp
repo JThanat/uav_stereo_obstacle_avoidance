@@ -72,7 +72,7 @@ void changeGlobalPoseWithRef(mavros_msgs::GlobalPositionTarget &global_pose, mav
     // flat world conversion with 111,111 meter per degree
     global_pose.latitude = global_home_pose.latitude - local_pose.pose.position.y/111111.0; 
     global_pose.longitude = global_home_pose.longitude - local_pose.pose.position.x/111111.0;
-    global_pose.altitude = global_home_pose.altitude;
+    global_pose.altitude = 4;
 }
 
 int main(int argc, char **argv)
@@ -360,11 +360,11 @@ int main(int argc, char **argv)
                 // if re-trigger guided mode, set new global zero position
                 global_home_pose.latitude = current_pose.latitude;
                 global_home_pose.longitude = current_pose.longitude;
-                global_home_pose.altitude = current_pose.altitude;
+                // global_home_pose.altitude = current_pose.altitude;
 
                 global_pose.latitude = global_home_pose.latitude;
                 global_pose.longitude = global_home_pose.longitude;
-                global_pose.altitude = global_home_pose.altitude;
+                // global_pose.altitude = global_home_pose.altitude;
 
                 current_waypoint_index = 0;
                 trigger_new_guided = true;
