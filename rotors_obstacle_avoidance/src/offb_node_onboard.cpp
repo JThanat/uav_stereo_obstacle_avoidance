@@ -9,6 +9,8 @@
 #include <mavros_msgs/CommandBool.h>
 #include <mavros_msgs/SetMode.h>
 #include <mavros_msgs/State.h>
+#include <mavros_msgs/GlobalPositionTarget.h>
+#include <sensor_msgs/NavSatFix.h>
 #include <linux/videodev2.h>
 #include <vector>
 #include <cmath>
@@ -40,25 +42,34 @@ using namespace umap_utility;
 using namespace wp;
 using namespace cv;
 
+typedef mavros_msgs::GlobalPositionTarget gbpos;
 mavros_msgs::State current_state;
-void state_cb(const mavros_msgs::State::ConstPtr &msg)
-{
+void state_cb(const mavros_msgs::State::ConstPtr& msg){
     current_state = *msg;
 }
 
-geometry_msgs::PoseStamped current_pose;
-void pose_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
+sensor_msgs::NavSatFix current_pose;
+void pose_cb(const sensor_msgs::NavSatFix::ConstPtr &msg)
 {
     current_pose = *msg;
 }
 
-bool checkEqualPose(const geometry_msgs::PoseStamped expectedPosition)
+bool checkEqualPose(const mavros_msgs::GlobalPositionTarget expectedPosition)
 {
-    return (
-        std::abs(expectedPosition.pose.position.x - current_pose.pose.position.x) < 0.1 && 
-        std::abs(expectedPosition.pose.position.y - current_pose.pose.position.y) < 0.1 && 
-        std::abs(expectedPosition.pose.position.z - current_pose.pose.position.z) < 0.1
-    );
+    return abs(expectedPosition.latitude - current_pose.latitude) < 0.00002 && abs(expectedPosition.longitude - current_pose.longitude) < 0.00002;
+}
+
+bool atZeroLatLong()
+{
+    // check if it is around 0 0 point
+    return abs(current_pose.latitude - 0.0) < std::numeric_limits<double>::epsilon() && abs(current_pose.longitude - 0.0) < std::numeric_limits<double>::epsilon();
+}
+
+void changeGlobalPoseWithRef(mavros_msgs::GlobalPositionTarget &global_pose, mavros_msgs::GlobalPositionTarget &global_home_pose, geometry_msgs::PoseStamped local_pose)
+{
+    // flat world conversion with 111,111 meter per degree
+    global_pose.latitude = global_home_pose.latitude + local_pose.pose.position.x/111111.0; 
+    global_pose.longitude = global_home_pose.latitude - local_pose.pose.position.y/111111.0;
 }
 
 int main(int argc, char **argv)
@@ -74,7 +85,9 @@ int main(int argc, char **argv)
 
     ros::init(argc, argv, "offb_node");
     ros::NodeHandle nh;
-    std::vector<geometry_msgs::PoseStamped> poses(200);
+    std::vector<geometry_msgs::PoseStamped> local_poses(20);
+    mavros_msgs::GlobalPositionTarget global_pose;
+    mavros_msgs::GlobalPositionTarget global_home_pose;
 
     int64 t;
     char filename[50];
@@ -95,7 +108,7 @@ int main(int argc, char **argv)
     bool ready = false;
 
     int obj_count;
-    int wp_gen = 100;
+    int wp_gen = 10;
     vector<ellipse_desc> ellipse_list(50);
     vector< pair<double, double> > waypoints(200);
     vector< pair<double, double> > waypoints_pub(200);
@@ -229,11 +242,14 @@ int main(int argc, char **argv)
 	}
 
     ros::Subscriber state_sub = nh.subscribe<mavros_msgs::State>("mavros/state", 10, state_cb);
-    ros::Publisher local_pos_pub = nh.advertise<geometry_msgs::PoseStamped>("mavros/setpoint_position/local", 10);
+    ros::Subscriber pose_sub = nh.subscribe<sensor_msgs::NavSatFix>("/mavros/global_position/global", 10, pose_cb);
+    
+    ros::Publisher global_pos_pub = nh.advertise<mavros_msgs::GlobalPositionTarget>("mavros/setpoint_raw/global", 10);
+    
     ros::ServiceClient arming_client = nh.serviceClient<mavros_msgs::CommandBool>("mavros/cmd/arming");
     ros::ServiceClient set_mode_client = nh.serviceClient<mavros_msgs::SetMode>("mavros/set_mode");
 
-    ros::Subscriber pose_sub = nh.subscribe<geometry_msgs::PoseStamped>("/mavros/local_position/pose", 10, pose_cb);
+
 
     //the setpoint publishing rate MUST be faster than 2Hz
     ros::Rate rate(20.0);
@@ -245,22 +261,61 @@ int main(int argc, char **argv)
         ros::spinOnce();
         ROS_INFO("SPIN!");
         rate.sleep();
-        ROS_INFO("Wake up");
     }
+
+    bool trigger_new_guided = false;
+    while (current_state.mode != "GUIDED")
+    {
+        ROS_INFO("Not in GUIDED MODE....Wait for position set up");
+        trigger_new_guided = true;
+    }
+    
     ROS_INFO("set pose array");
+
+    while(atZeroLatLong())
+    {
+        // std::cout << current_pose.latitude << " " << current_pose.longitude << std::endl;
+        ROS_INFO("check at zero point %.6f %.6f %.6f", current_pose.latitude, current_pose.longitude, current_pose.altitude);
+        ros::spinOnce();
+        rate.sleep();
+    }
+
+    global_home_pose.latitude = current_pose.latitude;
+    global_home_pose.longitude = current_pose.longitude;
+    global_home_pose.altitude = 4;
+    global_home_pose.velocity.x = 2.0;
+    global_home_pose.velocity.y = 2.0;
+    global_home_pose.velocity.z = 2.0;
+    global_home_pose.acceleration_or_force.x = 2;
+    global_home_pose.acceleration_or_force.y = 2;
+    global_home_pose.acceleration_or_force.z = 2;
+    global_home_pose.coordinate_frame = gbpos::FRAME_GLOBAL_REL_ALT;
+    global_home_pose.type_mask = 4088;
+
+    global_pose.latitude = global_home_pose.latitude
+    global_pose.longitude = global_home_pose.longitude
+    global_pose.altitude = global_home_pose.altitude
+    global_pose.velocity.x = global_home_pose.velocity.x
+    global_pose.velocity.y = global_home_pose.velocity.y
+    global_pose.velocity.z = global_home_pose.velocity.z
+    global_pose.acceleration_or_force.x = global_home_pose.acceleration_or_force.x
+    global_pose.acceleration_or_force.y = global_home_pose.acceleration_or_force.y
+    global_pose.acceleration_or_force.z = global_home_pose.acceleration_or_force.z
+    global_pose.coordinate_frame = global_home_pose.coordinate_frame
+    global_pose.type_mask = global_home_pose.type_mask
 
     // mock up waypoint
     for (i = 0; i < wp_gen ; i++)
     {
-        poses[i].pose.position.x = 0.2*i;
-        poses[i].pose.position.y = 0.0;
-        poses[i].pose.position.z = 2.0;
+        local_poses[i].pose.position.x = 5.0*i; // in meter
+        local_poses[i].pose.position.y = 0.0;
+        local_poses[i].pose.position.z = 4.0;
     }
 
     //send a few setpoints before starting
     for (int i = 100; ros::ok() && i > 0; --i)
     {
-        local_pos_pub.publish(poses[0]);
+        global_pos_pub.publish(global_home_pose);
         ros::spinOnce();
         rate.sleep();
     }
@@ -275,7 +330,7 @@ int main(int argc, char **argv)
     ros::Time last_calculation;
     
     f = 1065; // 
-    b = 15;   // in cm
+    b = 15;   // in centimeter
 
     loop_count = 0;
     last_calculation = ros::Time::now();
@@ -286,6 +341,7 @@ int main(int argc, char **argv)
         if (current_state.mode != "GUIDED")
         {   
             ROS_INFO("Not in GUIDED MODE");
+            trigger_new_guided = false;
             enabled = false;
             ros::spinOnce();
             rate.sleep();
@@ -293,20 +349,30 @@ int main(int argc, char **argv)
         }
         else
         {
+            ROS_INFO("In GUIDED MODE");
+            if (!trigger_new_guided)
+            {
+                // if re-trigger guided mode, set new global zero position
+                global_home_pose.latitude = current_pose.latitude;
+                global_home_pose.longitude = current_pose.longitude;
+                current_waypoint_index = 0;
+                trigger_new_guided = true;
+
+            }
             enabled = true;
         }
 
         if (!enabled) {
-            local_pos_pub.publish(poses[0]);
+            global_pos_pub.publish(global_home_pose);
             ros::spinOnce();
         }
         ready = true; // TODO REMOVE THIS!
-        if (!ready && checkEqualPose(poses[0]))
+        if (!ready && checkEqualPose(global_home_pose))
         {
             ready = true;
         }
 
-        if(checkEqualPose(poses[current_waypoint_index]) && current_waypoint_index != 200)
+        if(checkEqualPose(global_pose) && current_waypoint_index != 200)
         {
             current_waypoint_index++;
         }
@@ -453,8 +519,8 @@ int main(int argc, char **argv)
             
             ellipse_list = calculate_udisparity(disp8, max, image_size, obj_count, loop_count);
 
-            // current_x = poses[current_waypoint_index].pose.position.x*100; 
-            // current_y = poses[current_waypoint_index].pose.position.y*100;
+            // current_x = local_poses[current_waypoint_index].pose.position.x*100; 
+            // current_y = local_poses[current_waypoint_index].pose.position.y*100;
 
             current_x = 0; 
             current_y = 0;
@@ -486,20 +552,20 @@ int main(int argc, char **argv)
                 
                 se1 = ellipse_list[i].BSe.ptr<double>(0);
                 se2 = ellipse_list[i].BSe.ptr<double>(1);
-                se1[0] = se1[0] + 100; // 50 cm x boundary
-                se2[0] = se2[0] + 100; // 100 cm y boundary
+                se1[0] = se1[0] + 300; // 3 m x boundary
+                se2[0] = se2[0] + 500; // 5 cm y boundary
                 
                 // cout << "drawn: " << pe1[0] << " " << pe2[0] << " " << 2*se1[0] << " " << 2*se2[0] << endl;
                 ellipse(obstacle_map, Point(cvRound(pe1[0] + 3000),cvRound(2000 - pe2[0])), Size(cvRound(se1[0] - 100),cvRound(se2[0] - 100)), 0, 0, 360, Scalar(0,0,255),2);
                 ellipse(obstacle_map, Point(cvRound(pe1[0] + 3000),cvRound(2000 - pe2[0])), Size(cvRound(se1[0]),cvRound(se2[0])), 0, 0, 360, Scalar(0,255,0),2);
             }
             num_wp = wp_gen - current_waypoint_index;
-            waypoint_checking(poses, ellipse_list, obj_count, num_wp, current_waypoint_index);
+            waypoint_checking(local_poses, ellipse_list, obj_count, num_wp, current_waypoint_index);
             
             for ( i = 0 ; i < num_wp - 1 ; i++)
             {
-                cout << "waypoint" << " " << cvRound(-poses[current_waypoint_index+i].pose.position.y*100+3000) << " " << cvRound(2000 - poses[current_waypoint_index+i].pose.position.x*100) << " " << endl;
-                line(obstacle_map, Point(cvRound(-poses[current_waypoint_index+i].pose.position.y*100+3000), cvRound(2000 - poses[current_waypoint_index+i].pose.position.x*100)), Point(cvRound(-poses[current_waypoint_index+i+1].pose.position.y*100 + 3000), cvRound(2000 - poses[current_waypoint_index+i+1].pose.position.x*100)), Scalar(0,0,255), 2);
+                cout << "waypoint" << " " << cvRound(-local_poses[current_waypoint_index+i].pose.position.y*100+3000) << " " << cvRound(2000 - local_poses[current_waypoint_index+i].pose.position.x*100) << " " << endl;
+                line(obstacle_map, Point(cvRound(-local_poses[current_waypoint_index+i].pose.position.y*100+3000), cvRound(2000 - local_poses[current_waypoint_index+i].pose.position.x*100)), Point(cvRound(-local_poses[current_waypoint_index+i+1].pose.position.y*100 + 3000), cvRound(2000 - local_poses[current_waypoint_index+i+1].pose.position.x*100)), Scalar(0,0,255), 2);
             }
             sprintf( filename, "/home/ubuntu/img_log/obstacle_map%d.jpg", loop_count );
             imwrite(filename, obstacle_map);
@@ -507,7 +573,8 @@ int main(int argc, char **argv)
             last_calculation = ros::Time::now();
             loop_count++;
             }
-        local_pos_pub.publish(poses[current_waypoint_index]);
+        changeGlobalPoseWithRef(global_pose, global_home_pose, local_poses[current_waypoint_index]);
+        global_pos_pub.publish(global_pose);
         ros::spinOnce();
         rate.sleep();
     }
