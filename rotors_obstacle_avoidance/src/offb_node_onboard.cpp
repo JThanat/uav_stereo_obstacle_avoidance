@@ -293,17 +293,17 @@ int main(int argc, char **argv)
     global_home_pose.coordinate_frame = gbpos::FRAME_GLOBAL_REL_ALT;
     global_home_pose.type_mask = 4088;
 
-    global_pose.latitude = global_home_pose.latitude
-    global_pose.longitude = global_home_pose.longitude
-    global_pose.altitude = global_home_pose.altitude
-    global_pose.velocity.x = global_home_pose.velocity.x
-    global_pose.velocity.y = global_home_pose.velocity.y
-    global_pose.velocity.z = global_home_pose.velocity.z
-    global_pose.acceleration_or_force.x = global_home_pose.acceleration_or_force.x
-    global_pose.acceleration_or_force.y = global_home_pose.acceleration_or_force.y
-    global_pose.acceleration_or_force.z = global_home_pose.acceleration_or_force.z
-    global_pose.coordinate_frame = global_home_pose.coordinate_frame
-    global_pose.type_mask = global_home_pose.type_mask
+    global_pose.latitude = global_home_pose.latitude;
+    global_pose.longitude = global_home_pose.longitude;
+    global_pose.altitude = global_home_pose.altitude;
+    global_pose.velocity.x = global_home_pose.velocity.x;
+    global_pose.velocity.y = global_home_pose.velocity.y;
+    global_pose.velocity.z = global_home_pose.velocity.z;
+    global_pose.acceleration_or_force.x = global_home_pose.acceleration_or_force.x;
+    global_pose.acceleration_or_force.y = global_home_pose.acceleration_or_force.y;
+    global_pose.acceleration_or_force.z = global_home_pose.acceleration_or_force.z;
+    global_pose.coordinate_frame = global_home_pose.coordinate_frame;
+    global_pose.type_mask = global_home_pose.type_mask;
 
     // mock up waypoint
     for (i = 0; i < wp_gen ; i++)
