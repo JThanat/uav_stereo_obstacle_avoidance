@@ -57,7 +57,8 @@ void pose_cb(const sensor_msgs::NavSatFix::ConstPtr &msg)
 bool checkEqualPose(const mavros_msgs::GlobalPositionTarget expectedPosition)
 {
     double r = 0.00002;
-    return (current_pose.latitude - expectedPosition.latitude)*(current_pose.latitude - expectedPosition.latitude) + (current_pose.longitude - expectedPosition.longitude)*(current_pose.longitude - expectedPosition.longitude) < r*r;
+    // return (current_pose.latitude - expectedPosition.latitude)*(current_pose.latitude - expectedPosition.latitude) + (current_pose.longitude - expectedPosition.longitude)*(current_pose.longitude - expectedPosition.longitude) < r*r;
+    return abs(current_pose.latitude - expectedPosition.latitude) < r && abs(current_pose.longitude - expectedPosition.longitude) < r;
 }
 
 bool atZeroLatLong()
@@ -360,6 +361,11 @@ int main(int argc, char **argv)
                 global_home_pose.latitude = current_pose.latitude;
                 global_home_pose.longitude = current_pose.longitude;
                 global_home_pose.altitude = current_pose.altitude;
+
+                global_pose.latitude = global_home_pose.latitude;
+                global_pose.longitude = global_home_pose.longitude;
+                global_pose.altitude = global_home_pose.altitude;
+
                 current_waypoint_index = 0;
                 trigger_new_guided = true;
 
@@ -377,6 +383,8 @@ int main(int argc, char **argv)
             ready = true;
         }
 
+        ROS_INFO("Current waypoint index %d", current_waypoint_index);
+        ROS_INFO("Global lat %.6f %.6f", global_pose.latitude, global_pose.logitude);
         if(checkEqualPose(global_pose) && current_waypoint_index != 200)
         {
             current_waypoint_index++;
