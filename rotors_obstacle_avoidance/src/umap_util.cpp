@@ -47,7 +47,7 @@ namespace umap_utility
         uint8_t *p;
         char filename[50];
         int *cp, *connected_ptr;//finding neighbor pointer
-        Mat uhist_vis = Mat::zeros(max_disp, image_size.width, CV_8UC1);
+        Mat uhist_vis = Mat::zeros(max_disp, image_size.width, CV_8U);
         Mat uline_mask = Mat::zeros(max_disp, image_size.width, CV_8UC1);
         Mat group_rect = Mat::zeros(max_disp, image_size.width, CV_8UC3);
         Mat connected_component = Mat::zeros(max_disp, image_size.width, CV_32SC1);
