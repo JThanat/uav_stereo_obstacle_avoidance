@@ -397,7 +397,13 @@ int main(int argc, char **argv)
             t = getTickCount();
             left_image.convertTo(left_image_8uc1, CV_8UC1, 1);
             right_image.convertTo(right_image_8uc1, CV_8UC1, 1);
-            // imwrite("/home/ubuntu/img_log/left_image.jpg", left_image);
+
+            sprintf(filename, "/home/ubuntu/img_log/left%d.jpg", loop_count);
+            imwrite(filename, left_image_8uc1);
+
+            sprintf( filename, "/home/ubuntu/img_log/right%d.jpg", loop_count);
+            imwrite(filename, left_image_8uc1);
+
             for (i = 0 ; i < left_image.rows/2 ; i++)
             {
                 ib = i*2;
