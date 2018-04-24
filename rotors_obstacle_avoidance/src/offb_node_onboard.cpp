@@ -56,7 +56,8 @@ void pose_cb(const sensor_msgs::NavSatFix::ConstPtr &msg)
 
 bool checkEqualPose(const mavros_msgs::GlobalPositionTarget expectedPosition)
 {
-    return abs(expectedPosition.latitude - current_pose.latitude) < 0.00002 && abs(expectedPosition.longitude - current_pose.longitude) < 0.00002;
+    double r = 0.00002;
+    return (current_pose.latitude - expectedPosition.latitude)*(current_pose.latitude - expectedPosition.latitude) + (current_pose.longitude - expectedPosition.longitude)*(current_pose.longitude - expectedPosition.longitude) < r*r;
 }
 
 bool atZeroLatLong()
