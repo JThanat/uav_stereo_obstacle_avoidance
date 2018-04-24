@@ -56,7 +56,7 @@ void pose_cb(const sensor_msgs::NavSatFix::ConstPtr &msg)
 
 bool checkEqualPose(const mavros_msgs::GlobalPositionTarget expectedPosition)
 {
-    double r = 0.00002;
+    double r = 0.00005;
     // return (current_pose.latitude - expectedPosition.latitude)*(current_pose.latitude - expectedPosition.latitude) + (current_pose.longitude - expectedPosition.longitude)*(current_pose.longitude - expectedPosition.longitude) < r*r;
     return abs(current_pose.latitude - expectedPosition.latitude) < r && abs(current_pose.longitude - expectedPosition.longitude) < r;
 }
@@ -312,7 +312,7 @@ int main(int argc, char **argv)
     // mock up waypoint
     for (i = 0; i < wp_gen ; i++)
     {
-        local_poses[i].pose.position.x = 5.0*i; // in meter
+        local_poses[i].pose.position.x = 10.0*i; // in meter
         local_poses[i].pose.position.y = 0.0;
         local_poses[i].pose.position.z = 4.0;
     }
@@ -573,8 +573,8 @@ int main(int argc, char **argv)
                 
                 se1 = ellipse_list[i].BSe.ptr<double>(0);
                 se2 = ellipse_list[i].BSe.ptr<double>(1);
-                se1[0] = se1[0] + 300; // 3 m x boundary
-                se2[0] = se2[0] + 500; // 5 cm y boundary
+                se1[0] = se1[0] + 500; // 3 m x boundary
+                se2[0] = se2[0] + 1000; // 5 cm y boundary
                 
                 // cout << "drawn: " << pe1[0] << " " << pe2[0] << " " << 2*se1[0] << " " << 2*se2[0] << endl;
                 ellipse(obstacle_map, Point(cvRound(pe1[0] + 3000),cvRound(2000 - pe2[0])), Size(cvRound(se1[0] - 100),cvRound(se2[0] - 100)), 0, 0, 360, Scalar(0,0,255),2);
