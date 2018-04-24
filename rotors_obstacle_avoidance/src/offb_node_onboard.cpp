@@ -69,8 +69,8 @@ bool atZeroLatLong()
 void changeGlobalPoseWithRef(mavros_msgs::GlobalPositionTarget &global_pose, mavros_msgs::GlobalPositionTarget &global_home_pose, geometry_msgs::PoseStamped local_pose)
 {
     // flat world conversion with 111,111 meter per degree
-    global_pose.latitude = global_home_pose.latitude + local_pose.pose.position.x/111111.0; 
-    global_pose.longitude = global_home_pose.latitude - local_pose.pose.position.y/111111.0;
+    global_pose.latitude = global_home_pose.latitude - local_pose.pose.position.y/111111.0; 
+    global_pose.longitude = global_home_pose.longitude - local_pose.pose.position.x/111111.0;
 }
 
 int main(int argc, char **argv)
