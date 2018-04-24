@@ -269,6 +269,8 @@ int main(int argc, char **argv)
     while (current_state.mode != "GUIDED")
     {
         ROS_INFO("Not in GUIDED MODE....Wait for position set up");
+        ros::spinOnce();
+        rate.sleep();
         trigger_new_guided = true;
     }
     
