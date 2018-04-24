@@ -384,7 +384,7 @@ int main(int argc, char **argv)
         }
 
         ROS_INFO("Current waypoint index %d", current_waypoint_index);
-        ROS_INFO("Global lat %.6f %.6f", global_pose.latitude, global_pose.logitude);
+        ROS_INFO("Global lat %.6f %.6f", global_pose.latitude, global_pose.longitude);
         if(checkEqualPose(global_pose) && current_waypoint_index != 200)
         {
             current_waypoint_index++;
