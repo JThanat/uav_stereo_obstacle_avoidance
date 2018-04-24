@@ -415,12 +415,14 @@ int main(int argc, char **argv)
                     green = (ptr_i[jb] + ptr_i1[jb+1])/2;
                     red = ptr_i[jb+1];
                     blue = ptr_i1[jb];
-                    dbptr[j] =  uint8_t((red + red  + blue + green + green + green))/6;
+                    // dbptr[j] =  uint8_t((red + red  + blue + green + green + green))/6;
+                    dbptr[j] = uint8_t(sqrt(0.299*red*red + 0.587*green*green + 0.114*blue*blue));
 
                     green = (rptr_i[jb] + rptr_i1[jb+1])/2;
                     red = rptr_i[jb+1];
                     blue = rptr_i1[jb];
-                    rdbptr[j] = uint8_t((red + red  + blue + green + green + green))/6;
+                    // rdbptr[j] = uint8_t((red + red  + blue + green + green + green))/6;
+                    rdbptr[j] = uint8_t(sqrt(0.299*red*red + 0.587*green*green + 0.114*blue*blue));
                 }
             }
             t = getTickCount() - t;
@@ -517,6 +519,7 @@ int main(int argc, char **argv)
             imwrite(filename, disp8);
             minMaxLoc(disp8, &min, &max, NULL, NULL);
             
+            cout << disp8.rows << " " << disp8.cols << " " << max << endl;
             ellipse_list = calculate_udisparity(disp8, max, image_size, obj_count, loop_count);
 
             // current_x = local_poses[current_waypoint_index].pose.position.x*100; 
