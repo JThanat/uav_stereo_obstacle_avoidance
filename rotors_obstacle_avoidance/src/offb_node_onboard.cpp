@@ -13,7 +13,6 @@
 #include <sensor_msgs/NavSatFix.h>
 #include <linux/videodev2.h>
 #include <vector>
-#include <cmath>
 #include <malloc.h>
 #include <thread> 
 #include <unistd.h>
@@ -37,6 +36,9 @@
 extern "C" {
 #include "camera.h"
 }
+
+#include "math.h"
+
 using namespace std;
 using namespace umap_utility;
 using namespace wp;
@@ -58,13 +60,13 @@ bool checkEqualPose(const mavros_msgs::GlobalPositionTarget expectedPosition)
 {
     double r = 0.00005;
     // return (current_pose.latitude - expectedPosition.latitude)*(current_pose.latitude - expectedPosition.latitude) + (current_pose.longitude - expectedPosition.longitude)*(current_pose.longitude - expectedPosition.longitude) < r*r;
-    return abs(current_pose.latitude - expectedPosition.latitude) < r && abs(current_pose.longitude - expectedPosition.longitude) < r;
+    return fabs(current_pose.latitude - expectedPosition.latitude) < r && fabs(current_pose.longitude - expectedPosition.longitude) < r;
 }
 
 bool atZeroLatLong()
 {
     // check if it is around 0 0 point
-    return abs(current_pose.latitude - 0.0) < std::numeric_limits<double>::epsilon() && abs(current_pose.longitude - 0.0) < std::numeric_limits<double>::epsilon();
+    return fabs(current_pose.latitude - 0.0) < std::numeric_limits<double>::epsilon() && fabs(current_pose.longitude - 0.0) < std::numeric_limits<double>::epsilon();
 }
 
 void changeGlobalPoseWithRef(mavros_msgs::GlobalPositionTarget &global_pose, mavros_msgs::GlobalPositionTarget &global_home_pose, geometry_msgs::PoseStamped local_pose)
