@@ -7,7 +7,6 @@
 #include <mavros_msgs/State.h>
 #include <sensor_msgs/NavSatFix.h>
 #include <vector>
-#include <cmath>
 
 #include "math.h"
 
@@ -31,14 +30,19 @@ void pose_cb(const sensor_msgs::NavSatFix::ConstPtr &msg)
 bool atZeroLatLong()
 {
     // check if it is around 0 0 point
-    return abs(current_pose.latitude - 0.0) < std::numeric_limits<double>::epsilon() && abs(current_pose.longitude - 0.0) < std::numeric_limits<double>::epsilon();
+    return fabs(current_pose.latitude - 0.0) < std::numeric_limits<double>::epsilon() && fabs(current_pose.longitude - 0.0) < std::numeric_limits<double>::epsilon();
 }
 
 bool checkEqualPose(const mavros_msgs::GlobalPositionTarget expectedPosition)
 {
     double r = 0.00005;
+    double clat = current_pose.latitude;
+    double clong = current_post.longitude;
+    double elat = expectedPosition.latitude;
+    double elong = expectedPosition.longitude;
+    ROS_INFO("%.8f %.8f", fabs(clat - elat), fabs(clong - elong));
     // return (current_pose.latitude - expectedPosition.latitude)*(current_pose.latitude - expectedPosition.latitude) + (current_pose.longitude - expectedPosition.longitude)*(current_pose.longitude - expectedPosition.longitude) < r*r;
-    return abs(current_pose.latitude - expectedPosition.latitude) < r && abs(current_pose.longitude - expectedPosition.longitude) < r;
+    return fabs(clat - elat) < r && fabs(clong - elong) < r;
 }
 
 void changeGlobalPoseWithRef(mavros_msgs::GlobalPositionTarget &global_pose, mavros_msgs::GlobalPositionTarget &global_home_pose, geometry_msgs::PoseStamped local_pose)
