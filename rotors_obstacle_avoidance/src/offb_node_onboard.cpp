@@ -592,7 +592,7 @@ int main(int argc, char **argv)
             {
                 ROS_INFO("waypoint x: %d y: %d", cvRound(-local_poses[current_waypoint_index+i].pose.position.y*100+3000), cvRound(2000 - local_poses[current_waypoint_index+i].pose.position.x*100));
                 // cout << "waypoint" << " " << cvRound(-local_poses[current_waypoint_index+i].pose.position.y*100+3000) << " " << cvRound(2000 - local_poses[current_waypoint_index+i].pose.position.x*100) << " " << endl;
-                line(obstacle_map, Point(cvRound(-local_poses[current_waypoint_index+i].pose.position.y*100+3000), cvRound(2000 - local_poses[current_waypoint_index+i].pose.position.x*100)), Point(cvRound(-local_poses q[current_waypoint_index+i+1].pose.position.y*100 + 3000), cvRound(2000 - local_poses[current_waypoint_index+i+1].pose.position.x*100)), Scalar(0,0,255), 2);
+                line(obstacle_map, Point(cvRound(-local_poses[current_waypoint_index+i].pose.position.y*100+3000), cvRound(2000 - local_poses[current_waypoint_index+i].pose.position.x*100)), Point(cvRound(-local_poses [current_waypoint_index+i+1].pose.position.y*100 + 3000), cvRound(2000 - local_poses[current_waypoint_index+i+1].pose.position.x*100)), Scalar(0,0,255), 2);
             }
             for ( i = 0 ; i < num_wp ; i++)
             {
