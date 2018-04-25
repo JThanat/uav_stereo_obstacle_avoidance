@@ -385,10 +385,12 @@ int main(int argc, char **argv)
 
         ROS_INFO("Current waypoint index %d", current_waypoint_index);
         ROS_INFO("Global lat %.6f %.6f", global_pose.latitude, global_pose.longitude);
-        if(checkEqualPose(global_pose) && current_waypoint_index != 200)
+        if(checkEqualPose(global_pose))
         {
-            if (current_waypoint_index >= 9) continue;
-            else current_waypoint_index++;
+            if (current_waypoint_index >= 9) 
+                continue;
+            else 
+                current_waypoint_index++;
         }
         
         if(ready && ros::Time::now() - last_calculation > ros::Duration(0.5))
