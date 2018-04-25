@@ -349,6 +349,7 @@ int main(int argc, char **argv)
         {   
             ROS_INFO("Not in GUIDED MODE");
             trigger_new_guided = false;
+            current_waypoint_index = 0;
             enabled = false;
             ros::spinOnce();
             rate.sleep();
