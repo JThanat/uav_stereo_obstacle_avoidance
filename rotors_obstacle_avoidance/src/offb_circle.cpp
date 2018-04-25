@@ -37,7 +37,7 @@ bool checkEqualPose(const mavros_msgs::GlobalPositionTarget expectedPosition)
 {
     double r = 0.00005;
     double clat = current_pose.latitude;
-    double clong = current_post.longitude;
+    double clong = current_pose.longitude;
     double elat = expectedPosition.latitude;
     double elong = expectedPosition.longitude;
     ROS_INFO("%.8f %.8f", fabs(clat - elat), fabs(clong - elong));
