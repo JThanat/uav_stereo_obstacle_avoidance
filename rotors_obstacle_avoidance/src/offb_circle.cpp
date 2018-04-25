@@ -86,23 +86,20 @@ int main(int argc, char **argv)
         rate.sleep();
     }
 
-    std::vector<mavros_msgs::GlobalPositionTarget> global_pose, global_pose_home;
-    geometry_msgs::global_posestamped local_pose(20);
-    local_pose.pose.position.x = 0;
-    local_pose.pose.position.y = 0;
-    local_pose.pose.position.z = 4;
+    mavros_msgs::GlobalPositionTarget global_pose, global_home_pose;
+    std::vector<geometry_msgs::PoseStamped> local_poses(20);
 
-    global_pose_home.latitude = current_pose.latitude;
-    global_pose_home.longitude = current_pose.longitude;
-    global_pose_home.altitude = 4.0;
-    global_pose_home.velocity.x = 2.0;
-    global_pose_home.velocity.y = 2.0;
-    global_pose_home.velocity.z = 2.0;
-    global_pose_home.acceleration_or_force.x = 2;
-    global_pose_home.acceleration_or_force.y = 2;
-    global_pose_home.acceleration_or_force.z = 2;
-    global_pose_home.coordinate_frame = gbpos::FRAME_GLOBAL_REL_ALT;
-    global_pose_home.type_mask = 4088;
+    global_home_pose.latitude = current_pose.latitude;
+    global_home_pose.longitude = current_pose.longitude;
+    global_home_pose.altitude = 4.0;
+    global_home_pose.velocity.x = 2.0;
+    global_home_pose.velocity.y = 2.0;
+    global_home_pose.velocity.z = 2.0;
+    global_home_pose.acceleration_or_force.x = 2;
+    global_home_pose.acceleration_or_force.y = 2;
+    global_home_pose.acceleration_or_force.z = 2;
+    global_home_pose.coordinate_frame = gbpos::FRAME_GLOBAL_REL_ALT;
+    global_home_pose.type_mask = 4088;
 
     global_pose.latitude = current_pose.latitude + 0.005;
     global_pose.longitude = current_pose.longitude;
