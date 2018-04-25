@@ -161,12 +161,11 @@ int main(int argc, char **argv)
     while(ros::ok()) {
         if (current_state.mode != "GUIDED") {
             ROS_INFO("Vehicle is not in GUIDED Mode");
-
+            trigger_new_guided = false;
             ros::spinOnce();
             rate.sleep();
             continue;
         } else {
-            trigger_new_guided = false;
             if (!trigger_new_guided)
             {
                 // if re-trigger guided mode, set new global zero position
@@ -188,7 +187,7 @@ int main(int argc, char **argv)
             if(current_waypoint_index >= 4) continue;
             else current_waypoint_index++;
         }
-
+        ROS_INFO("Current Position %d %.8f %.8f", current_waypoint_index, global_pose.latitude, global_pose.longitude);
         changeGlobalPoseWithRef(global_pose, global_home_pose, local_poses[current_waypoint_index]);
         global_pos_pub.publish(global_pose);
         ros::spinOnce();
