@@ -185,8 +185,8 @@ int main(int argc, char **argv)
 
         if(checkEqualPose(global_pose))
         {
-            current_waypoint_index++;
-            current_waypoint_index %= 5;
+            if(current_waypoint_index >= 4) continue;
+            else current_waypoint_index++;
         }
 
         changeGlobalPoseWithRef(global_pose, global_home_pose, local_poses[current_waypoint_index]);
