@@ -7,7 +7,6 @@
 #include <mavros_msgs/State.h>
 #include <sensor_msgs/NavSatFix.h>
 #include <vector>
-#include <cmath>
 
 #include "math.h"
 
@@ -31,21 +30,35 @@ void pose_cb(const sensor_msgs::NavSatFix::ConstPtr &msg)
 bool atZeroLatLong()
 {
     // check if it is around 0 0 point
-    return abs(current_pose.latitude - 0.0) < std::numeric_limits<double>::epsilon() && abs(current_pose.longitude - 0.0) < std::numeric_limits<double>::epsilon();
+    return fabs(current_pose.latitude - 0.0) < std::numeric_limits<double>::epsilon() && fabs(current_pose.longitude - 0.0) < std::numeric_limits<double>::epsilon();
 }
 
-// bool checkEqualPose(const geometry_msgs::PoseStamped expectedPosition)
-// {
-//     return (
-//         std::abs(expectedPosition.pose.position.x - current_pose.pose.position.x) < 0.3 && 
-//         std::abs(expectedPosition.pose.position.y - current_pose.pose.position.y) < 0.3 && 
-//         std::abs(expectedPosition.pose.position.z - current_pose.pose.position.z) < 0.3
-//     );
-// }
+bool checkEqualPose(const mavros_msgs::GlobalPositionTarget expectedPosition)
+{
+    double r = 0.00005;
+    double clat = current_pose.latitude;
+    double clong = current_pose.longitude;
+    double elat = expectedPosition.latitude;
+    double elong = expectedPosition.longitude;
+    ROS_INFO("%.8f %.8f", fabs(clat - elat), fabs(clong - elong));
+    // return (current_pose.latitude - expectedPosition.latitude)*(current_pose.latitude - expectedPosition.latitude) + (current_pose.longitude - expectedPosition.longitude)*(current_pose.longitude - expectedPosition.longitude) < r*r;
+    return fabs(clat - elat) < r && fabs(clong - elong) < r;
+}
+
+void changeGlobalPoseWithRef(mavros_msgs::GlobalPositionTarget &global_pose, mavros_msgs::GlobalPositionTarget &global_home_pose, geometry_msgs::PoseStamped local_pose)
+{
+    // flat world conversion with 111,111 meter per degree
+    global_pose.latitude = global_home_pose.latitude + local_pose.pose.position.x/111111.0; 
+    global_pose.longitude = global_home_pose.longitude - local_pose.pose.position.y/111111.0;
+    global_pose.altitude = 4.0;
+}
 
 int main(int argc, char **argv)
 {
     int i;
+    int current_waypoint_index;
+    int wp_gen = 10;
+    bool trigger_new_guided = false;
     ros::init(argc, argv, "offb_node");
     ros::NodeHandle nh;
 
@@ -64,59 +77,75 @@ int main(int argc, char **argv)
 
     // wait for FCU connection
     while(ros::ok() && !current_state.connected){
-        std::cout << current_pose.latitude << " " << current_pose.longitude << std::endl;
+        // std::cout << current_pose.latitude << " " << current_pose.longitude << std::endl;
         ros::spinOnce();
         rate.sleep();
     }
 
     while(atZeroLatLong())
     {
-        std::cout << current_pose.latitude << " " << current_pose.longitude << std::endl;
+        // std::cout << current_pose.latitude << " " << current_pose.longitude << std::endl;
+        ROS_INFO("check at zero point %.6f %.6f %.6f", current_pose.latitude, current_pose.longitude, current_pose.altitude);
         ros::spinOnce();
         rate.sleep();
     }
 
-    std::vector<mavros_msgs::GlobalPositionTarget> poses(20);
-    geometry_msgs::PoseStamped local_pose;
-    local_pose.pose.position.x = 0;
-    local_pose.pose.position.y = 0;
-    local_pose.pose.position.z = 5;
+    mavros_msgs::GlobalPositionTarget global_pose, global_home_pose;
+    std::vector<geometry_msgs::PoseStamped> local_poses(20);
 
-    poses[0].latitude = current_pose.latitude;
-    poses[0].longitude = current_pose.longitude;
-    poses[0].altitude = 5;
-    poses[0].velocity.x = 2.0;
-    poses[0].velocity.y = 2.0;
-    poses[0].velocity.z = 2.0;
-    poses[0].acceleration_or_force.x = 2;
-    poses[0].acceleration_or_force.y = 2;
-    poses[0].acceleration_or_force.z = 2;
-    poses[0].coordinate_frame = gbpos::FRAME_GLOBAL_REL_ALT;
-    poses[0].type_mask = 4088;
+    global_home_pose.latitude = current_pose.latitude;
+    global_home_pose.longitude = current_pose.longitude;
+    global_home_pose.altitude = 4.0;
+    global_home_pose.velocity.x = 2.0;
+    global_home_pose.velocity.y = 2.0;
+    global_home_pose.velocity.z = 2.0;
+    global_home_pose.acceleration_or_force.x = 2;
+    global_home_pose.acceleration_or_force.y = 2;
+    global_home_pose.acceleration_or_force.z = 2;
+    global_home_pose.coordinate_frame = gbpos::FRAME_GLOBAL_REL_ALT;
+    global_home_pose.type_mask = 4088;
 
-    std::cout <<  poses[0].latitude << " " <<  poses[0].longitude << " " << poses[0].altitude << std::endl;
+    global_pose.latitude = current_pose.latitude + 0.005;
+    global_pose.longitude = current_pose.longitude;
+    global_pose.altitude = 4.0;
+    global_pose.velocity.x = 2.0;
+    global_pose.velocity.y = 2.0;
+    global_pose.velocity.z = 2.0;
+    global_pose.acceleration_or_force.x = 2;
+    global_pose.acceleration_or_force.y = 2;
+    global_pose.acceleration_or_force.z = 2;
+    global_pose.coordinate_frame = gbpos::FRAME_GLOBAL_REL_ALT;
+    global_pose.type_mask = 4088;
 
-    poses[1].latitude = current_pose.latitude;
-    poses[1].longitude = current_pose.longitude + 0.1;
-    poses[1].altitude = 5;
-    poses[1].velocity.x = 2.0;
-    poses[1].velocity.y = 2.0;
-    poses[1].velocity.z = 2.0;
-    poses[1].acceleration_or_force.x = 2;
-    poses[1].acceleration_or_force.y = 2;
-    poses[1].acceleration_or_force.z = 2;
-    poses[1].coordinate_frame = gbpos::FRAME_GLOBAL_REL_ALT;
-    poses[1].type_mask = 4088;
+    // mock up waypoint
+    local_poses[0].pose.position.x = 0.0; // in meter
+    local_poses[0].pose.position.y = 0.0;
+    local_poses[0].pose.position.z = 4.0;
 
+    local_poses[1].pose.position.x = 10.0; // in meter
+    local_poses[1].pose.position.y = 0.0;
+    local_poses[1].pose.position.z = 4.0;
 
-    std::cout <<  poses[1].latitude << " " <<  poses[1].longitude << " " << poses[1].altitude << std::endl;
-    
+    local_poses[2].pose.position.x = 10.0; // in meter
+    local_poses[2].pose.position.y = -10.0;
+    local_poses[2].pose.position.z = 4.0;
+
+    local_poses[3].pose.position.x = 20.0; // in meter
+    local_poses[3].pose.position.y = -10.0;
+    local_poses[3].pose.position.z = 4.0;
+
+    local_poses[4].pose.position.x = 20.0; // in meter
+    local_poses[4].pose.position.y = 0.0;
+    local_poses[4].pose.position.z = 4.0;
+
     //send a few setpoints before starting
-    for(int i = 100; ros::ok() && i > 0; --i){
-        global_pos_pub.publish(poses[0]);
+    for (int i = 100; ros::ok() && i > 0; --i)
+    {
+        global_pos_pub.publish(global_home_pose);
         ros::spinOnce();
         rate.sleep();
     }
+
     mavros_msgs::SetMode offb_set_mode;
     offb_set_mode.request.custom_mode = "GUIDED";
 
@@ -130,57 +159,40 @@ int main(int argc, char **argv)
 
     i = 0;
     while(ros::ok()) {
-        // if (current_state.mode != "GUIDED")
-        // {
-            
-        //     ROS_INFO("Vehicle is not in GUIDED Mode");
-        //     continue;
-        // }
-        if (current_state.mode != "GUIDED" &&
-            (ros::Time::now() - last_request > ros::Duration(5.0)))
-        {
-            if (set_mode_client.call(offb_set_mode) &&
-                offb_set_mode.response.mode_sent)
+        if (current_state.mode != "GUIDED") {
+            ROS_INFO("Vehicle is not in GUIDED Mode");
+            trigger_new_guided = false;
+            ros::spinOnce();
+            rate.sleep();
+            continue;
+        } else {
+            if (!trigger_new_guided)
             {
-                ROS_INFO("GUIDED enabled");
-                enabled = true;
-            }
-            last_request = ros::Time::now();
-        }
-        else if(current_state.mode == "GUIDED")
-        {
-            enabled = true;
-            if(current_state.armed)
-            {
-                armed = true;
-            }
-            else if (!current_state.armed &&
-                (ros::Time::now() - last_request > ros::Duration(5.0)))
-            {
-                if (arming_client.call(arm_cmd) &&
-                    arm_cmd.response.success)
-                {
-                    ROS_INFO("Vehicle armed");
-                    armed = true;
-                }
-                last_request = ros::Time::now();
-            }
+                // if re-trigger guided mode, set new global zero position
+                global_home_pose.latitude = current_pose.latitude;
+                global_home_pose.longitude = current_pose.longitude;
+                // global_home_pose.altitude = current_pose.altitude;
 
+                global_pose.latitude = global_home_pose.latitude;
+                global_pose.longitude = global_home_pose.longitude;
+                // global_pose.altitude = global_home_pose.altitude;
+
+                current_waypoint_index = 0;
+                trigger_new_guided = true;
+            }
         }
 
-        if (!enabled || !armed)
+        if(checkEqualPose(global_pose))
         {
-            ROS_INFO("Pub 0");
-            global_pos_pub.publish(poses[0]);
-        } 
-        else
-        {
-            ROS_INFO("Pub 1");
-            global_pos_pub.publish(poses[1]);
+            if(current_waypoint_index >= 4) continue;
+            else current_waypoint_index++;
         }
-
+        ROS_INFO("Current Position %d %.8f %.8f", current_waypoint_index, global_pose.latitude, global_pose.longitude);
+        changeGlobalPoseWithRef(global_pose, global_home_pose, local_poses[current_waypoint_index]);
+        global_pos_pub.publish(global_pose);
         ros::spinOnce();
         rate.sleep();
+
     }
 
     return 0;

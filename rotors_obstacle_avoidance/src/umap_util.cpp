@@ -1,9 +1,9 @@
 #include "umap_util.hpp"
-#include <opencv2/core.hpp>
-#include <opencv2/imgproc.hpp>
-#include <opencv2/core/utility.hpp>
-#include <opencv2/imgcodecs.hpp>
-#include <opencv2/highgui.hpp>
+
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/calib3d/calib3d.hpp>
 
 #include <iostream>
 #include <string>
@@ -47,7 +47,7 @@ namespace umap_utility
         uint8_t *p;
         char filename[50];
         int *cp, *connected_ptr;//finding neighbor pointer
-        Mat uhist_vis = Mat::zeros(max_disp, image_size.width, CV_8UC1);
+        Mat uhist_vis = Mat::zeros(max_disp, image_size.width, CV_8U);
         Mat uline_mask = Mat::zeros(max_disp, image_size.width, CV_8UC1);
         Mat group_rect = Mat::zeros(max_disp, image_size.width, CV_8UC3);
         Mat connected_component = Mat::zeros(max_disp, image_size.width, CV_32SC1);
@@ -61,7 +61,7 @@ namespace umap_utility
         int hist_size[] = {max_disp};
         float tmp_range[] = {0.0, (float)max_disp};
         const float *ranges[] = {tmp_range};
-        vector<ellipse_desc> ellipse_desc_objects(20);
+        vector<ellipse_desc> ellipse_desc_objects(50);
 
         // calculate map
         t = getTickCount();
@@ -199,11 +199,11 @@ namespace umap_utility
 
         t = getTickCount() - t;
         cout << "Connect the Line Time elapsed: " << t * 1000 / getTickFrequency() << "ms" << endl;
-        sprintf( filename, "./uhist%d.jpg", loop_count );
+        sprintf( filename, "/home/ubuntu/img_log/uhist%d.jpg", loop_count );
         imwrite(filename, uhist_vis);
-        sprintf( filename, "./group_rect%d.jpg", loop_count ); 
+        sprintf( filename, "/home/ubuntu/img_log/group_rect%d.jpg", loop_count ); 
         imwrite(filename, group_rect);
-        sprintf( filename, "./uline%d.jpg", loop_count ); 
+        sprintf( filename, "/home/ubuntu/img_log/uline%d.jpg", loop_count ); 
         imwrite(filename, uline_mask);
 
         // return u1, u2, d1, d2 of each object

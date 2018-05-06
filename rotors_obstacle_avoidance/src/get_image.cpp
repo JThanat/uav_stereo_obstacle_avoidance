@@ -38,7 +38,7 @@ namespace getimage
 		uint16_t delay = 0;
 		int ret = 0;
 		int fd;
-		int exposure = 2; // milisec
+		int exposure = 1; // milisec
 		char *gpioName = "/sys/class/gpio/gpio237/value";
 		char *spidevName = "/dev/spidev0.0";
 

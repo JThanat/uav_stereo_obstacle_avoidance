@@ -54,25 +54,24 @@ int main(int argc, char **argv)
     ros::Time last_request = ros::Time::now();
 
     while(ros::ok()){
-
-        if (current_state.mode != "GUIDED")
+    if (current_state.mode != "GUIDED")
+    {
+        ROS_INFO("Vehicle is not in GUIDED MODE, cannot override position");
+        continue;
+    }
+    else 
+    {
+        if (!current_state.armed)
         {
-            ROS_INFO("Vehicle is not in GUIDED MODE, cannot override position");
-            continue;
+            ROS_INFO("Vehicle not armed");
         }
-        else 
+        else
         {
-            if (!current_state.armed)
-            {
-                ROS_INFO("Vehicle not armed");
-            }
-            else
-            {
-                ROS_INFO("Vehicle armed");
-            }
+            ROS_INFO("Vehicle armed");
         }
-
-        
+    }
+	ros::spinOnce();
+    rate.sleep();
     }
 
     return 0;
